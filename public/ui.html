@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Example Domain</title>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+  <script src="static/ui.js"></script>
+  <style>
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  .left-column {
+    float:left;
+    padding:10px;
+    margin-top:-10px;
+  }
+  .right-column {
+    float:left;
+    padding:10px;
+    margin-top:-10px;
+  }
+  .center-column {
+    float:left;
+    padding:10px;
+    margin-top:-10px;
+  }
+  .p-list {
+    margin:10px;
+    max-width:550px;
+  }
+  .p-list p {
+    margin:5px;
+  }
+  .grid-opts{
+    margin:5px;
+  }
+
+  </style>
+</head>
+<body>
+  <div class="left-column">
+    <div class="connection">
+      <h1>Connection</h1>
+      <button id="connect-button" name="connect">Connect</button>
+      <button id="reconnect-button" name="reconnect">Reconnect</button>
+      <button id="disconnect-button" name="disconnect">Disconnect</button>
+      <h3 id="conn-state-text">Disconnected</h3>
+      <label><input type="checkbox" id="verbose-checkbox" value="" checked>Verbose mode</label>
+      <button id="comtest-button" name="comtest">Comtest</button>
+    </div>
+    <div class='vset'>
+      <h1>VSet</h1>
+      <div>
+        <input type="text" name="batch"/>
+        <button id="vset-button" name="send">Send</button>
+        <table>
+          <tr>
+            <th>Pin</th>
+            <th>Value</th>
+            <th>Settling</th>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><input type="text" name="value" size="4" value="0"/></td>
+            <td><input type="text" name="settling" size="4" value="250"/></td>
+            <td><button name="0">Send</button></td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td><input type="text" name="value" size="4" value="0"/></td>
+            <td><input type="text" name="settling" size="4" value="250"/></td>
+            <td><button name="1">Send</button></td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td><input type="text" name="value" size="4" value="0"/></td>
+            <td><input type="text" name="settling" size="4" value="250"/></td>
+            <td><button name="2">Send</button></td>
+          <tr>
+          </tr>
+            <td>11</td>
+            <td><input type="text" name="value" size="4" value="0"/></td>
+            <td><input type="text" name="settling" size="4" value="250"/></td>
+            <td><button name="3">Send</button></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <div class='vread'>
+      <h1>VRead</h1>
+      <div>
+        <input type="text" name="batch"/>
+        <button id="vread-button" name="send">Send</button>
+        <table>
+          <tr>
+            <th>Pin</th>
+            <th>Period</th>
+            <th></th>
+            <th>Value</th>
+          </tr>
+          <tr>
+            <td>0</td>
+            <td><input type="text" name="period" size="4" value="0"/></td>
+            <td><button name="0">Send</button></td>
+            <td class="vread-value">0</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td><input type="text" name="period" size="4" value="0"/></td>
+            <td><button name="1">Send</button></td>
+            <td class="vread-value">0</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><input type="text" name="period" size="4" value="0"/></td>
+            <td><button name="2">Send</button></td>
+            <td class="vread-value">0</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><input type="text" name="period" size="4" value="0"/></td>
+            <td><button name="3">Send</button></td>
+            <td class="vread-value">0</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <!-- <div class="history">
+      <h1>Command history</h1>
+      <div>
+        <select id="comm-hist-select" name="history" multiple>
+          <option value="0">Command1</option>
+          <option value="1">Command2</option>
+          <option value="2">Command3</option>
+        </select>
+        <button id="comm-hist-button">Run</button>
+      </div>
+    </div> -->
+  </div>
+  <div class="center-column">
+    <div>
+      <h1>VSet Grid</h1>
+      <img id="cuadricula" src="static/cuadricula.png" alt="grid" style="width:100%;max-width:450px"><br>
+      <div class="grid-opts">
+        <table>
+          <tr>
+            <th>X</th>
+            <th>Y</th>
+          </tr>
+          <tr>
+            <td><input type="text" name="x" size="4" value="0"/></td>
+            <td><input type="text" name="y" size="4" value="0"/></td>
+            <td><button name="send">Send</button><td>
+            <td><button name="reset">Reset</button></td>
+            <td><label><input type="checkbox" id="autosend-checkbox" value="0" checked>Autosend</label></td>
+          </tr>
+        </table>
+        <table>
+          <tr>
+            <th>Settling</th>
+            <th>Resolution</th>
+          </tr>
+          <tr>
+            <td><input type="text" name="settling" size="4" value="250"></td>
+            <td><input type="text" name="resolution" size="4" value="5"></td>
+          </tr>
+        </table>
+        <table>
+          <tr>
+            <th>Right</th>
+            <th>Top</th>
+            <th>Left</th>
+            <th>Bottom</th>
+          </tr>
+          <tr>
+            <td><input type="text" name="right" size="4" value="3"></td>
+            <td><input type="text" name="top" size="4" value="9"></td>
+            <td><input type="text" name="left" size="4" value="10"></td>
+            <td><input type="text" name="bottom" size="4" value="11"></td>
+          </tr>
+        </table>
+        <!-- <label>Settling: <input type="text" name="settling" size="4" value="0"/></label>
+        <label>Resolution: <input type="text" name="resolution" size="4" value="0"/></label><br><br>
+        <label>x: <input type="text" id="x-text" name="x" size="4" value="0"/></label>
+        <label>y: <input type="text" id="y-text" name="y" size="4" value="0"/></label> -->
+      </div>
+    </div>
+  </div>
+  <div class="right-column">
+    <div>
+      <h1>Communication history</h1>
+      <div class="p-list" id="comm-msg-hist-list">
+      </div>
+    </div>
+  </div>
+</body>
+</html>
