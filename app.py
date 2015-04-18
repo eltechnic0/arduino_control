@@ -5,11 +5,6 @@ import argparse
 import importlib
 import pdb
 
-cherrypy.config.update(
-{'server.socket_host': os.getenv('IP', '0.0.0.0'),
-'server.socket_port': int(os.getenv('PORT', 8080)),
-})
-
 def is_connected():
     serialObject = cherrypy.engine.publish('serial-isconnected')[0]
     if not serialObject:
@@ -23,13 +18,22 @@ cherrypy.tools.is_connected = cherrypy._cptools.HandlerTool(is_connected)
 
 class Controller(object):
 
+    def __init__(self, quickstart=False, verbose=True):
+        if quickstart:
+            cherrypy.engine.subscribe('start',
+                lambda: cherrypy.engine.publish('serial-connect')[0])
+        if not verbose and quickstart:
+            cherrypy.engine.subscribe('start',
+                lambda: cherrypy.engine.publish(
+                    'serial-write', ['verbose', 0])[0])
+
     @cherrypy.expose
     def index(self):
         return open('public/ui.html')
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def is_connected(self):
+    def isConnected(self):
         result = cherrypy.engine.publish('serial-isconnected')[0]
         return True if result else False
 
@@ -106,8 +110,6 @@ class Controller(object):
                 result = 'Error running the script'
         return result
 
-
-
     def __del__(self):
         _ = self.disconnect()
 
@@ -125,13 +127,26 @@ if __name__ == '__main__':
             'tools.staticdir.dir': './public'
         }
     }
-    # TODO: add more options, like one for connecting to the serial device automatically
     parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--serialport", type=str, help="name of the port that the arduino is connected to", \
-                        action="store", default='/dev/ttyACM0')
+    parser.add_argument("-s", "--serialport", type=str, default='/dev/ttyACM0',
+        help="name of the port that the arduino is connected to", action="store")
+    parser.add_argument("-c", "--connect", action="store_true", default=False,
+        help="connect to the serial device immediately")
+    parser.add_argument("-p", "--port", type=int, action="store", default=8080,
+        help="port number for the web server")
+    parser.add_argument("-v", "--verbose", action="store_true", default=False,
+        help="verbose communication. Only works when the --connect flag is given. \
+            Otherwise verbose output is enabled")
     args = parser.parse_args()
+    # IP 0.0.0.0 accepts all incoming ips on the given port
+    cherrypy.config.update(
+    {'server.socket_host': os.getenv('IP', '0.0.0.0'),
+    'server.socket_port': int(os.getenv('PORT', args.port)),
+    })
     SerialObjectPlugin(args.serialport, cherrypy.engine).subscribe()
+    webapp = Controller(quickstart=args.connect, verbose=args.verbose)
+    # Delete parser object
     args = None
     parser = None
-    webapp = Controller()
+    # Start web app
     cherrypy.quickstart(webapp, '/', conf)
