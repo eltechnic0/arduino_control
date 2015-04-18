@@ -87,7 +87,7 @@ class Controller(object):
     @cherrypy.expose
     @cherrypy.tools.is_connected()
     @cherrypy.tools.json_out()
-    def serialVerbosity(self, value='true'):
+    def serialVerbose(self, value='true'):
         value = 1 if value == 'true' else 0
         result = cherrypy.engine.publish('serial-write', ['verbose',value])[0]
         return result
