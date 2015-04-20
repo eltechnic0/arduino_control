@@ -101,7 +101,7 @@ class SerialInterface(object):
     def _read_response(self, numreads=1):
         """
         Reads all lines until an `OK:ready` message, for `numreads` times.
-        The data returned is [[data],[msg]], where data is the data returned between
+        The data returned is [{"data":[data]|data,"msg":[msg]}], where data is the data returned between
         an `OK:start` and an `OK:ready`, and msg contains all lines read as list.
         A zero number of reads is allowed.
         """
@@ -114,7 +114,7 @@ class SerialInterface(object):
         while i < numreads:
             res = self.serialObject.readline()
             if not res:
-                return data, ["No response... :-("]
+                return {"data":data, "msg":["No response... :-("]}
             res = res.decode('ascii', 'replace').strip()
             response.append(res)
             if res.startswith("OK:start"):
@@ -131,7 +131,7 @@ class SerialInterface(object):
             if isdata:
                 data.append(res)
             if time() - before > timeout:
-                return data, ["Timeout expired"]
+                return {"data":data, "msg":["Timeout expired"]}
 
     def connect(self, timeout=0.1):
         """
