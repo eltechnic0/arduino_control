@@ -94,20 +94,34 @@ class Controller(object):
 
     @cherrypy.expose
     @cherrypy.tools.is_connected()
+    @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
-    def serialScript(self, fname=None, **kwargs):
+    # def serialScript(self, fname=None, **kwargs):
+    def serialScript(self):
+        """
+        Takes json input {"fname":script_name,**kwargs}
+        Returns [success:bool, msg:str]
+        """
+        fname = cherrypy.request.json['fname']
+        kwargs = {k:v for k,v in cherrypy.request.json.items() if k != 'fname'}
         try:
             module = importlib.import_module('scripts.'+fname)
             script = module.AppScript(cherrypy)
         except (ImportError, AttributeError) as exc:
             cherrypy.engine.log('ERROR '+str(exc))
-            result = 'Error importing the script'
+            msg = 'Error importing the script'
+            result = {"success":False, "result":[{"data":[], "msg":[msg]}]}
         else:
             try:
-                result = script.run(**kwargs)
+                # Should not return anything for now
+                _ = script.run(**kwargs)
             except Exception as exc:
                 cherrypy.engine.log('ERROR '+str(exc))
-                result = 'Error running the script'
+                msg = 'Error running the script'
+                result = {"success":False, "result":[{"data":[], "msg":[msg]}]}
+            else:
+                msg = 'Script {} run successfully'.format(fname)
+                result = {"success":True, "result":[{"data":[], "msg":[msg]}]}
         return result
 
     def __del__(self):

@@ -1,7 +1,7 @@
 $(document).ready(function(){
 
   var connStateText = $("#conn-state-text");
-  var commHistMax = 20;
+  var commHistMax = 18;
 
   $.get("/isConnected").done(function(value) {
     str = value == 1 ? "Connected" : "Disconnected";
@@ -10,30 +10,63 @@ $(document).ready(function(){
     str = "Server connection error";
   });
 
+  function appendToScriptHistory(str) {
+    var histlist = $("#script-history-list");
+    var item = $("<li>"+str+"</li>").click(function() {
+      $("#script-textbox").val($(this).text());
+    });
+    histlist.append(item);
+    var length = histlist.children().length;
+    if(length > 5) {
+      histlist.children().slice(0, length - 5).remove();
+    }
+  }
+
   function appendToCmdHistory(str) {
+    // :str   [{"data":data,"msg":msg},...] or string
     var i, j;
 
-    console.log(str);
+    // if(!$("#verbose-checkbox").is(":checked")) {
+    //   str = str[0]["msg"];
+    //   flashMessage(str.join("\n"));
+    //   return;
+    // }
+    // TODO: change [0] to sth better
+    // flashMessage(str[0]["msg"].join("\n"));
 
     var histdiv = $("#comm-msg-hist-list");
 
     if(!$.isArray(str)) {
       histdiv.append("<p>" + str + "</p>");
-      return;
     }
-
-    for(i = 0; i < str.length; i++) {
-      for(j = 0; j < str[i]["msg"].length; j++) {
-        histdiv.append("<p>" + str[i]["msg"][j] + "</p>");
-        // if(histdiv.children().length > commHistMax) {
-        //   histdiv.children(":first").remove();
-        // }
+    else {
+      for(i = 0; i < str.length; i++) {
+        for(j = 0; j < str[i]["msg"].length; j++) {
+          histdiv.append("<p>" + str[i]["msg"][j] + "</p>");
+        }
       }
     }
     var length = histdiv.children().length;
     if(length > commHistMax) {
       histdiv.children().slice(0, length - commHistMax).remove();
     }
+  }
+
+  function flashMessage(str) {
+    noty({
+      text:str,
+      type:'success',
+      timeout:3000,
+      killer:true,
+      dismissQueue:false,
+      theme:'relax',
+      layout:'topLeft',
+      animation:{
+        open: {height: 'toggle'},
+        close: {height: 'toggle'},
+        easing: 'swing',
+        speed: 300
+      }});
   }
 
   function isValidVSetPin(val) {
@@ -114,9 +147,9 @@ $(document).ready(function(){
       method:'POST',
       data:JSON.stringify({pins:pins,values:values,settling:settling}),
       contentType: 'application/json'
-      }).done(function(str){
-        appendToCmdHistory(str);
-      });
+    }).done(function(str){
+      appendToCmdHistory(str);
+    });
   });
 
   $(".vset table button").click(function(e){
@@ -138,8 +171,9 @@ $(document).ready(function(){
       method:'POST',
       data:JSON.stringify({pins:[pin],values:[value],settling:settling}),
       contentType: 'application/json'
-    }).done(function(str){
-        appendToCmdHistory(str);
+    })
+    .done(function(str){
+      appendToCmdHistory(str);
     });
   });
 
@@ -167,17 +201,17 @@ $(document).ready(function(){
       method:'POST',
       data:JSON.stringify({pins:pins}),
       contentType: 'application/json'
-      })
-      .done(function(str){
-        appendToCmdHistory(str);
-        // console.log(str);
-        lim = Math.min(str.length, 4);
-        for(var i = 0; i < lim; i++) {
-          // console.log("pin: " + pins[i]);
-          // console.log("result: " + str[i]["data"]);
-          $(".vread-value").eq(pins[i]).text(str[i]["data"]);
-        }
-      });
+    })
+    .done(function(str){
+      appendToCmdHistory(str);
+      // console.log(str);
+      lim = Math.min(str.length, 4);
+      for(var i = 0; i < lim; i++) {
+        // console.log("pin: " + pins[i]);
+        // console.log("result: " + str[i]["data"]);
+        $(".vread-value").eq(pins[i]).text(str[i]["data"]);
+      }
+    });
   });
 
   $(".vread table button").click(function(e){
@@ -189,10 +223,10 @@ $(document).ready(function(){
       method:'POST',
       data:JSON.stringify({pins:[index]}),
       contentType: 'application/json'
-      })
-      .done(function(str){
-        appendToCmdHistory(str);
-        $(".vread-value").eq(index).text(str[0]["data"]);
+    })
+    .done(function(str){
+      appendToCmdHistory(str);
+      $(".vread-value").eq(index).text(str[0]["data"]);
     });
   });
 
@@ -250,9 +284,9 @@ $(document).ready(function(){
         method:'POST',
         data:JSON.stringify({pins:pins,values:values,settling:settling}),
         contentType: 'application/json'
-        })
-        .done(function(str){
-          appendToCmdHistory(str);
+      })
+      .done(function(str){
+        appendToCmdHistory(str);
       });
     }
 
@@ -274,9 +308,9 @@ $(document).ready(function(){
       method:'POST',
       data:JSON.stringify({pins:pins,values:values,settling:settling}),
       contentType: 'application/json'
-      })
-      .done(function(str){
-        appendToCmdHistory(str);
+    })
+    .done(function(str){
+      appendToCmdHistory(str);
     });
   });
 
@@ -298,9 +332,33 @@ $(document).ready(function(){
       method:'POST',
       data:JSON.stringify({pins:pins,values:values,settling:settling}),
       contentType: 'application/json'
-      })
-      .done(function(str){
-        appendToCmdHistory(str);
+    })
+    .done(function(str){
+      appendToCmdHistory(str);
+    });
+  });
+
+  $(".scripts button").click(function() {
+    var text = $("#script-textbox").val();
+    if(text=="") {
+      return;
+    }
+    $.ajax({
+      url:'/serialScript',
+      method:'POST',
+      data:text,
+      contentType: 'application/json'
+    })
+    .done(function(result){
+      console.log(result);
+      flashMessage(result[1]);
+      appendToCmdHistory(result[1]);
+      if(result[0] == 1) {
+        appendToScriptHistory(text);
+      }
+    })
+    .fail(function(result){
+      if(result.status == 400) flashMessage('Invalid script input');
     });
   });
 
