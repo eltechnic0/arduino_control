@@ -21,4 +21,4 @@ class AppScript(Script):
             values[j] = int(abs(valy))
             _ = self.serial_write('vset', [pins, values, settling])
             self.data.append(valx,valy)
-            yield self.data
+        return self.data
