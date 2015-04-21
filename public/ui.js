@@ -1,13 +1,16 @@
 $(document).ready(function(){
 
   var connStateText = $("#conn-state-text");
-  var commHistMax = 18;
+  var commHistMax = 15;
+  var scriptHistMax = 10;
 
   $.get("/isConnected").done(function(value) {
     str = value == 1 ? "Connected" : "Disconnected";
     connStateText.text(str);
-  }).fail(function() {
-    str = "Server connection error";
+  });
+
+  $("#script-history-list li").click(function() {
+    $("#script-textbox").val($(this).text());
   });
 
   function appendToScriptHistory(str) {
@@ -17,50 +20,78 @@ $(document).ready(function(){
     });
     histlist.append(item);
     var length = histlist.children().length;
-    if(length > 5) {
-      histlist.children().slice(0, length - 5).remove();
+    if(length > scriptHistMax) {
+      histlist.children().slice(0, length - scriptHistMax).remove();
     }
   }
 
-  function appendToCmdHistory(str) {
-    // :str   [{"data":data,"msg":msg},...] or string
-    var i, j;
-
-    // if(!$("#verbose-checkbox").is(":checked")) {
-    //   str = str[0]["msg"];
-    //   flashMessage(str.join("\n"));
-    //   return;
-    // }
-    // TODO: change [0] to sth better
-    // flashMessage(str[0]["msg"].join("\n"));
-
-    var histdiv = $("#comm-msg-hist-list");
-
-    if(!$.isArray(str)) {
-      histdiv.append("<p>" + str + "</p>");
+  function appendToCmdHistory(result, flashtext, cmdtext) {
+    var histlist = $("#comm-msg-hist-list");
+    var url, obj;
+    // TODO: handle data printing??
+    if(result['success'] == true) {
+      flashMessage(flashtext,'success');
+      var item = $("<li>"+cmdtext+"</li>").click(execComHistItem);
+      histlist.append(item);
+    } else {
+      flashMessage(result['info'],'error');
     }
-    else {
-      for(i = 0; i < str.length; i++) {
-        for(j = 0; j < str[i]["msg"].length; j++) {
-          histdiv.append("<p>" + str[i]["msg"][j] + "</p>");
-        }
-      }
-    }
-    var length = histdiv.children().length;
+    var length = histlist.children().length;
     if(length > commHistMax) {
-      histdiv.children().slice(0, length - commHistMax).remove();
+      histlist.children().slice(0, length - commHistMax).remove();
     }
   }
 
-  function flashMessage(str) {
+  var execComHistItem = function() {
+    try {
+      obj = JSON.parse($(this).text());
+    } catch(err) {
+      flashMessage("Invalid syntax", 'error');
+      return;
+    }
+    switch(obj["cmd"]){
+      case "vset":
+        url = "/serialVSet";
+        break;
+      case "vread":
+        url = "/serialVRead";
+        break;
+      case "comtest":
+        url = "/serialComtest";
+        break;
+      case "script":
+        url = "/serialScript";
+        break;
+      case "verbose":
+        url = "/serialVerbose";
+        break;
+      default:
+        console.log("Unexpected command name");
+    }
+    $.ajax({
+      url:url,
+      method:'POST',
+      data:JSON.stringify(obj["input"]),
+      contentType: 'application/json'
+    })
+    .done(function(res){
+      if(res["success"] == true) {
+        flashMessage(obj["cmd"],'success');
+      } else {
+        flashMessage(res["info"],'error');
+      }
+    });
+  };
+
+  function flashMessage(text, type) {
     noty({
-      text:str,
-      type:'success',
-      timeout:3000,
+      text:text,
+      type:type,
+      timeout:2000,
       killer:true,
       dismissQueue:false,
       theme:'relax',
-      layout:'topLeft',
+      layout:'topCenter',
       animation:{
         open: {height: 'toggle'},
         close: {height: 'toggle'},
@@ -96,13 +127,12 @@ $(document).ready(function(){
   });
 
   $("button#comtest-button").click(function(){
-    $.get("/serialComtest").done(function(str){
-      appendToCmdHistory(str);
+    $.get("/serialComtest").done(function(res){
+      appendToCmdHistory(res, 'comtest', '{"cmd":"comtest"}');
     });
   });
 
   $("button#vset-button").click(function(){
-    var tocmdhist = function(){appendToCmdHistory("Invalid expression");}
     var text = $(".vset input[name=batch]").val();
     if(text == []){
       return;
@@ -111,44 +141,46 @@ $(document).ready(function(){
 
     var parts = text.split(',');
     if(!$.isArray(parts)) {
-      tocmdhist();
+      flashMessage("Invalid expression",'error');
       return;
     }
     if(parts.length != 3) {
-      tocmdhist();
+      flashMessage("Invalid expression",'error');
       return;
     }
     var pins = parts[0].trim().split(' ').map(Number);
     if(pins.some(function(val){return isNaN(val);})) {
-      tocmdhist();
+      flashMessage("Invalid expression",'error');
       return;
     }
     if(pins.some(isValidVSetPin)) {
-      appendToCmdHistory("Invalid pin");
+      flashMessage("Invalid pin",'error');
       return;
     }
     var values = parts[1].trim().split(' ').map(Number);
     if(values.some(function(val){return isNaN(val);})) {
-      tocmdhist();
+      flashMessage("Invalid expression",'error');
       return;
     }
     if(values.some(function(val){return val>255 || val<0})){
-      appendToCmdHistory("Invalid value");
+      flashMessage("Invalid value",'error');
       return;
     }
     if(values.length != pins.length) {
-      tocmdhist();
+      flashMessage("Invalid expression",'error');
       return;
     }
     var settling = Number(parts[2]);
-    // console.log({pins:pins,values:values,settling:settling});
+    var data = JSON.stringify({pins:pins,values:values,settling:settling});
     $.ajax({
       url:'/serialVSet',
       method:'POST',
-      data:JSON.stringify({pins:pins,values:values,settling:settling}),
+      data:data,
       contentType: 'application/json'
-    }).done(function(str){
-      appendToCmdHistory(str);
+    })
+    .done(function(res){
+      appendToCmdHistory(res, 'vset '+pins+' '+values+' '+settling,
+        '{"cmd":"vset","input":'+data+'}');
     });
   });
 
@@ -164,16 +196,16 @@ $(document).ready(function(){
 
     if(isNaN(value) || isNaN(settling)) return;
 
-    // console.log({pins:[pin],values:[value],settling:settling});
-
+    var data = JSON.stringify({pins:[pin],values:[value],settling:settling});
     $.ajax({
       url:'/serialVSet',
       method:'POST',
-      data:JSON.stringify({pins:[pin],values:[value],settling:settling}),
+      data:data,
       contentType: 'application/json'
     })
-    .done(function(str){
-      appendToCmdHistory(str);
+    .done(function(res){
+      appendToCmdHistory(res, 'vset '+pin+' '+value+' '+settling,
+        '{"cmd":"vset","input":'+data+'}');
     });
   });
 
@@ -187,29 +219,26 @@ $(document).ready(function(){
     var pins = text.split(' ').map(Number);
 
     if(pins.some(isValidVReadPin)) {
-      appendToCmdHistory("Invalid pin");
+      flashMessage("Invalid pin",'error');
       return;
     }
     if(pins.some(function(val){return isNaN(val);})) {
-      appendToCmdHistory("Invalid expression");
+      flashMessage("Invalid expression",'error');
       return;
     }
-    // console.log({pins:pins});
-    // this call is a must for sending arrays in json format
+    // this request format is a must for sending json arrays to cherrypy
+    var data = JSON.stringify({pins:pins});
     $.ajax({
       url:'/serialVRead',
       method:'POST',
-      data:JSON.stringify({pins:pins}),
+      data:data,
       contentType: 'application/json'
     })
-    .done(function(str){
-      appendToCmdHistory(str);
-      // console.log(str);
-      lim = Math.min(str.length, 4);
+    .done(function(res){
+      appendToCmdHistory(res, 'vread '+pins, '{"cmd":"vread","input":'+data+'}');
+      lim = Math.min(res["data"]["data"].length, 4);
       for(var i = 0; i < lim; i++) {
-        // console.log("pin: " + pins[i]);
-        // console.log("result: " + str[i]["data"]);
-        $(".vread-value").eq(pins[i]).text(str[i]["data"]);
+        $(".vread-value").eq(pins[i]).text(res["data"]["data"][i]);
       }
     });
   });
@@ -217,23 +246,24 @@ $(document).ready(function(){
   $(".vread table button").click(function(e){
     var button = $(e.target);
     var index = Number(button.attr("name"));
-    // console.log(index);
+    var data = JSON.stringify({pins:[index]});
     $.ajax({
       url:'/serialVRead',
       method:'POST',
-      data:JSON.stringify({pins:[index]}),
+      data:data,
       contentType: 'application/json'
     })
-    .done(function(str){
-      appendToCmdHistory(str);
-      $(".vread-value").eq(index).text(str[0]["data"]);
+    .done(function(res){
+      appendToCmdHistory(res, 'vread '+index,'{"cmd":"vread","input":'+data+'}');
+      $(".vread-value").eq(index).text(res["data"]["data"]);
     });
   });
 
   $("#verbose-checkbox").click(function(){
     var value = $("#verbose-checkbox").is(":checked")
-    $.post("/serialVerbose", {value:value}).done(function(str){
-      appendToCmdHistory(str);
+    $.post("/serialVerbose", {value:value}).done(function(res){
+      appendToCmdHistory(res, 'verbose '+value,
+        '{"cmd":"verbose","input":'+JSON.stringify({value:value})+'}');
     });
   });
 
@@ -251,7 +281,6 @@ $(document).ready(function(){
     var convert = function(x) {return Math.abs(Math.round(x/100*255));};
     var x = convert(X);
     var y = convert(Y);
-    // console.log('X: ' + X + ', Y: ' + Y);
     if(X >= 0) values[0] = x; else values[2] = x;
     if(Y >= 0) values[1] = y; else values[3] = y;
 
@@ -268,8 +297,6 @@ $(document).ready(function(){
     $(".grid-opts input[name=x]").val(X);
     $(".grid-opts input[name=y]").val(Y);
 
-    // console.log('X: ' + X + ', Y: ' + Y);
-
     var value = $("#autosend-checkbox").is(":checked");
     if(value == true) {
 
@@ -277,16 +304,16 @@ $(document).ready(function(){
       var pins = data[0];
       var values = data[1];
 
-      // console.log('pins: ' + pins + ', values: ' + values + ', settling: ' + settling + ', resolution: ' + resolution);
-
+      var data = JSON.stringify({pins:pins,values:values,settling:settling});
       $.ajax({
         url:'/serialVSet',
         method:'POST',
-        data:JSON.stringify({pins:pins,values:values,settling:settling}),
+        data:data,
         contentType: 'application/json'
       })
-      .done(function(str){
-        appendToCmdHistory(str);
+      .done(function(res){
+        appendToCmdHistory(res, 'vset '+pins+' '+values+' '+settling,
+          '{"cmd":"vset","input":'+data+'}');
       });
     }
 
@@ -301,16 +328,16 @@ $(document).ready(function(){
     var pins = data[0];
     var values = data[1];
 
-    // console.log('pins: ' + pins + ', values: ' + values + ', settling: ' + settling);
-
+    var data = JSON.stringify({pins:pins,values:values,settling:settling});
     $.ajax({
       url:'/serialVSet',
       method:'POST',
-      data:JSON.stringify({pins:pins,values:values,settling:settling}),
+      data:data,
       contentType: 'application/json'
     })
-    .done(function(str){
-      appendToCmdHistory(str);
+    .done(function(res){
+      appendToCmdHistory(res, 'vset '+pins+' '+values+' '+settling,
+        '{"cmd":"vset","input":'+data+'}');
     });
   });
 
@@ -327,20 +354,26 @@ $(document).ready(function(){
     var pins = [right, top, left, bottom];
     var values = [0, 0, 0, 0];
 
+    var data = JSON.stringify({pins:pins,values:values,settling:settling});
     $.ajax({
       url:'/serialVSet',
       method:'POST',
-      data:JSON.stringify({pins:pins,values:values,settling:settling}),
+      data:data,
       contentType: 'application/json'
     })
-    .done(function(str){
-      appendToCmdHistory(str);
+    .done(function(res){
+      appendToCmdHistory(res, 'vset '+pins+' '+values+' '+settling,
+        '{"cmd":"vset","input":'+data+'}');
     });
   });
 
   $(".scripts button").click(function() {
     var text = $("#script-textbox").val();
-    if(text=="") {
+    if(text=="") return;
+    try{
+      var cmd = JSON.parse(text);
+    } catch(err) {
+      flashMessage('Invalid syntax','error');
       return;
     }
     $.ajax({
@@ -350,15 +383,10 @@ $(document).ready(function(){
       contentType: 'application/json'
     })
     .done(function(result){
-      console.log(result);
-      flashMessage(result[1]);
-      appendToCmdHistory(result[1]);
-      if(result[0] == 1) {
+      appendToCmdHistory(result, cmd['fname'], '{"cmd":"script","input":'+text+'}');
+      if(result['success'] == true) {
         appendToScriptHistory(text);
       }
-    })
-    .fail(function(result){
-      if(result.status == 400) flashMessage('Invalid script input');
     });
   });
 

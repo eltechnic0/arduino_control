@@ -3,14 +3,23 @@ import cherrypy
 from modules.plugin_serialobject import SerialObjectPlugin
 import argparse
 import importlib
+import json
 import pdb
 
 def is_connected():
+    """
+    Prehandler for methods that write to the Arduino. Checks if the device is
+    connected and prevents the normal handler to run if it is disconnected.
+    """
     serialObject = cherrypy.engine.publish('serial-isconnected')[0]
     if not serialObject:
         cherrypy.response.status = 200
-        cherrypy.response.headers['Content-Type'] = 'text/plain'
-        cherrypy.response.body = [b"The serial object is disconnected."]
+        # cherrypy.response.headers['Content-Type'] = 'text/plain'
+        cherrypy.response.headers['Content-Type'] = 'application/json'
+        result = {'success':False,'info':'The serial object is disconnected'}
+        result = json.dumps(result).encode('utf-8')
+        cherrypy.response.body = result
+        # cherrypy.response.body = [b"The serial object is disconnected."]
         # supress normal handler
         return True
 
@@ -18,12 +27,14 @@ cherrypy.tools.is_connected = cherrypy._cptools.HandlerTool(is_connected)
 
 class Controller(object):
 
-    def __init__(self, quickstart=False, verbose=True):
+    def __init__(self, quickstart=False, verbose=False):
+        # Subscribe to the start channel to connect and disable verbosity when
+        # the server is ready
         if quickstart:
             cherrypy.engine.subscribe('start',
                 lambda: cherrypy.engine.publish('serial-connect')[0])
-        if not verbose and quickstart:
-            cherrypy.engine.subscribe('start',
+        if not verbose:
+            cherrypy.engine.subscribe('serial-just-connected',
                 lambda: cherrypy.engine.publish(
                     'serial-write', ['verbose', 0])[0])
 
@@ -96,7 +107,6 @@ class Controller(object):
     @cherrypy.tools.is_connected()
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
-    # def serialScript(self, fname=None, **kwargs):
     def serialScript(self):
         """
         Takes json input {"fname":script_name,**kwargs}
@@ -110,18 +120,18 @@ class Controller(object):
         except (ImportError, AttributeError) as exc:
             cherrypy.engine.log('ERROR '+str(exc))
             msg = 'Error importing the script'
-            result = {"success":False, "result":[{"data":[], "msg":[msg]}]}
+            result = {'success':False, 'info':msg}
         else:
             try:
                 # Should not return anything for now
-                _ = script.run(**kwargs)
+                data = script.run(**kwargs)
             except Exception as exc:
                 cherrypy.engine.log('ERROR '+str(exc))
                 msg = 'Error running the script'
-                result = {"success":False, "result":[{"data":[], "msg":[msg]}]}
+                result = {'success':False, 'info':msg}
             else:
                 msg = 'Script {} run successfully'.format(fname)
-                result = {"success":True, "result":[{"data":[], "msg":[msg]}]}
+                result = {'success':True, 'info':msg, 'data':data}
         return result
 
     def __del__(self):

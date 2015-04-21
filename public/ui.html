@@ -12,33 +12,22 @@
   <style>
   body {
     margin:0;
-    /*margin-top: -10px;*/
     padding:0;
   }
   .left-column {
     float:left;
     padding:10px;
     padding-top:0px;
-    margin-top:-10px;
   }
   .right-column {
     float:left;
     padding:10px;
     padding-top:0px;
-    margin-top:-10px;
   }
   .center-column {
     float:left;
     padding:10px;
     padding-top:0px;
-    margin-top:-10px;
-  }
-  .p-list {
-    margin:10px;
-    max-width:550px;
-  }
-  .p-list p {
-    margin:5px;
   }
   .grid-opts{
     margin:5px;
@@ -47,14 +36,13 @@
     list-style-type:none;
     padding:0px;
     margin:0px;
+    max-width:500px;
   }
-  #script-history-list li:hover {
+  #script-history-list li:hover,
+  #comm-msg-hist-list li:hover {
     background-color:#f1f1f1;
+    cursor:pointer;
   }
-  /*.noty_message{
-    width:100px;
-    height:100px;
-  }*/
 
   </style>
 </head>
@@ -66,7 +54,7 @@
       <button id="reconnect-button" name="reconnect">Reconnect</button>
       <button id="disconnect-button" name="disconnect">Disconnect</button>
       <h3 id="conn-state-text">Disconnected</h3>
-      <label><input type="checkbox" id="verbose-checkbox" value="" checked>Verbose mode</label>
+      <label><input type="checkbox" id="verbose-checkbox" value="">Verbose mode</label>
       <button id="comtest-button" name="comtest">Comtest</button>
     </div>
     <div class='vset'>
@@ -146,17 +134,6 @@
         </table>
       </div>
     </div>
-    <!-- <div class="history">
-      <h1>Command history</h1>
-      <div>
-        <select id="comm-hist-select" name="history" multiple>
-          <option value="0">Command1</option>
-          <option value="1">Command2</option>
-          <option value="2">Command3</option>
-        </select>
-        <button id="comm-hist-button">Run</button>
-      </div>
-    </div> -->
   </div>
   <div class="center-column">
     <div>
@@ -200,42 +177,29 @@
             <td><input type="text" name="bottom" size="4" value="11"></td>
           </tr>
         </table>
-        <!-- <label>Settling: <input type="text" name="settling" size="4" value="0"/></label>
-        <label>Resolution: <input type="text" name="resolution" size="4" value="0"/></label><br><br>
-        <label>x: <input type="text" id="x-text" name="x" size="4" value="0"/></label>
-        <label>y: <input type="text" id="y-text" name="y" size="4" value="0"/></label> -->
       </div>
     </div>
   </div>
   <div class="right-column">
     <div class="scripts">
       <h1>Run script</h1>
-      <!-- <input id="script-textbox" type="text" name="script"> -->
-      <!-- <textarea id="script-textbox" cols="35" rows="4" style="resize:none"></textarea>
-      <button>Send</button> -->
       <table>
         <td>
-          <textarea id="script-textbox" cols="35" rows="4"></textarea>
+          <textarea id="script-textbox" cols="35" rows="5"></textarea>
         </td>
         <td style="vertical-align:top">
           <button>Send</button>
         </td>
       </table>
-      <h4 style="margin-bottom:0px">Available scripts</h4>
-      <ul class='tight-list'>
-        <li>{"fname":"script_test","string":"Hello world!","array":[1,2,3]}</li>
-      </ul>
       <h4 style="margin-bottom:0px">Script history</h4>
       <ul class='tight-list' id="script-history-list">
+        <li>{"fname":"script_test","string":"Hello world!","array":[1,2,3]}</li>
       </ul>
     </div>
-    <!-- <div>
-      <h1>Command history</h1>
-    </div> -->
     <div>
       <h1>Communications</h1>
-      <div class="p-list" id="comm-msg-hist-list">
-      </div>
+      <ul class="tight-list" id="comm-msg-hist-list">
+      </ul>
     </div>
   </div>
 </body>

@@ -14,11 +14,16 @@ For more options type `python3 app.py --help`.
 
 ### Writing a custom script
 
-Custom scripts are subclasses of the `Script` class from the `app_script` module. They must implement the `run` function at least, and to send commands to the Arduino the convenience method `serial_write` should be used. They must be stored in the scripts folder. For an example, see `script_test.py`.
+Custom scripts are subclasses of the `Script` class from the `app_script`
+module. They must implement the `run` function at least, and they should use the
+convenience method `serial_write` to send commands to the Arduino. They must be
+stored in the scripts folder. For an example, see `script_test.py`.
 
 ### Running a script
 
-To run a script either use the web interface (not implemented yet) or make a request to `/serialScript` with the name of the script and the kwargs as json payload. For example:
+To run a script either use the web interface (not implemented yet) or make a
+request to `/serialScript` with the name of the script and the kwargs as json
+payload. For example:
 
 ```python
 requests.post('http://localhost:8080/serialScript',

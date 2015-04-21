@@ -22,6 +22,8 @@ class SerialObjectPlugin(plugins.SimplePlugin):
     def connect(self):
         result = self.serial.connect()
         self.bus.log(result[1])
+        if result[0]:
+            _ = self.bus.publish('serial-just-connected')
         return result[0]
 
     def disconnect(self):
@@ -40,8 +42,8 @@ class SerialObjectPlugin(plugins.SimplePlugin):
                 result = self.serial.serial_write(data[0], [])
         except (ValueError, SerialException, AttributeError) as e:
             self.bus.log('ERROR ' + str(e))
-            return None
-        return result
+            return {'success':False,'data':None,'info':str(e)}
+        return {'success':True,'data':result,'info':None}
 
     # def test(self, str=''):
     #     self.bus.log(str)
