@@ -43,10 +43,27 @@
     background-color:#f1f1f1;
     cursor:pointer;
   }
-
+  .clickable :hover {
+    background-color:#f1f1f1;
+    cursor:pointer;
+  }
+  .clickable {
+    text-decoration: underline;
+  }
+  .modal {
+    position:fixed;
+    left:50px;
+    top:50px;
+    padding:10px;
+    border: 1px solid black;
+    border-radius: 4px;
+    box-shadow: 0px 0px 4px black;
+    background-color: white;
+  }
   </style>
 </head>
 <body>
+  <div id="modal-container"></div>
   <div class="left-column">
     <div class="connection">
       <h1>Connection</h1>
@@ -195,6 +212,9 @@
       <ul class='tight-list' id="script-history-list">
         <li>{"fname":"script_test","string":"Hello world!","array":[1,2,3]}</li>
       </ul>
+    </div>
+    <div id="calibration-trigger" class="clickable">
+      <h1>Camera calibration</h1>
     </div>
     <div>
       <h1>Communications</h1>

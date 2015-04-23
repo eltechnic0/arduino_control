@@ -137,6 +137,37 @@ class Controller(object):
     def __del__(self):
         _ = self.disconnect()
 
+class CameraCalibration(object):
+    def __init__(self):
+        self.file = 'cam_calibration.html'
+
+    @cherrypy.expose
+    def index(self):
+        return open('public/'+self.file)
+
+    @cherrypy.expose
+    def refresh(self):
+        import subprocess
+        args = "streamer -c /dev/video0 -o public/outfile.jpeg".split()
+        try:
+            res = subprocess.call(args)
+        except Exception as e:
+            cherrypy.engine.log('ERROR '+str(e))
+        return
+
+    @cherrypy.expose
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    def save(self):
+        rect = cherrypy.request.json
+        try:
+            with open("public/cam_calibration.json","w") as f:
+                json.dump(rect, f)
+        except Exception as e:
+            cherrypy.engine.log("ERROR " + str(e))
+            return False
+        return True
+
 
 if __name__ == '__main__':
     conf = {
@@ -172,5 +203,7 @@ if __name__ == '__main__':
     # Delete parser object
     args = None
     parser = None
+    # Instantiate additional complements - currently only CameraCalibration
+    webapp.calibration = CameraCalibration()
     # Start web app
     cherrypy.quickstart(webapp, '/', conf)

@@ -99,6 +99,7 @@ $(document).ready(function(){
         speed: 300
       }});
   }
+  window.app = {flashMessage: flashMessage};
 
   function isValidVSetPin(val) {
     return [3,9,10,11].indexOf(val) == -1;
@@ -390,4 +391,21 @@ $(document).ready(function(){
     });
   });
 
+  var modalstate = false;
+  $("#calibration-trigger").click(function() {
+    if(modalstate == false){
+      modalstate = true;
+      $("#modal-container").attr("class","modal");
+      $("#modal-container").load("/calibration/index");
+      // $.get("/calibration/index").done(function(html) {
+      //   $("#modal-container").attr("class","modal");
+      //   console.log(html);
+      //   $("#modal-container").load(html);
+      // });
+    } else {
+      modalstate = false;
+      $("#modal-container").removeAttr("class");
+      $("#modal-container").empty();
+    }
+  });
 });
