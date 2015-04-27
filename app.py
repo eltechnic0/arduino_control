@@ -1,6 +1,7 @@
 import os
 import cherrypy
 from modules.plugin_serialobject import SerialObjectPlugin
+from modules.makotool import MakoTool
 import argparse
 import importlib
 import json
@@ -24,10 +25,41 @@ def is_connected():
         return True
 
 cherrypy.tools.is_connected = cherrypy._cptools.HandlerTool(is_connected)
+cherrypy.tools.render = MakoTool()
 
 class Controller(object):
 
     def __init__(self, quickstart=False, verbose=False):
+        # Search for addons as folders inside the addons folder, and take the
+        # first non '__init__.py' file. Builds a list of addons' info and mounts
+        # them into the server tree
+        addons = []
+        for parent in os.listdir('addons/'):
+            for file in os.listdir(os.path.join('addons/', parent)):
+                # only one file allowed for each addon currently
+                name, extension = file.split('.')
+                if name != '__init__' and extension == 'py':
+                    module = importlib.import_module('.'.join(['addons',
+                                                                parent,
+                                                                name]))
+                    addon = module.AppAddon()
+                    cherrypy.tree.mount(addon,
+                                        addon.addon_conf['url'],
+                                        addon.cpconf)
+                    addons.append(addon.addon_conf)
+                    break
+            # with open(os.path.join('addons', parent, 'conf.json')) as f:
+            #     addons.append(json.load(f))
+        self.addons = addons
+
+        # Template engine plugin
+        base_dir = os.path.abspath(os.getcwd())
+        from modules.makoplugin import MakoTemplatePlugin
+        cherrypy.engine.mako = MakoTemplatePlugin(cherrypy.engine,
+                            os.path.join(base_dir, 'public'))
+                            # os.path.join(base_dir, 'cache'))
+        cherrypy.engine.mako.subscribe()
+
         # Subscribe to the start channel to connect and disable verbosity when
         # the server is ready
         if quickstart:
@@ -39,8 +71,13 @@ class Controller(object):
                     'serial-write', ['verbose', 0])[0])
 
     @cherrypy.expose
+    @cherrypy.tools.render(template='ui.mako')
     def index(self):
-        return open('public/ui.html')
+        # return open('public/ui.html')
+        # cherrypy.response.status = 200
+        # return {'addons':self.addons}
+        pass
+    # index._cp_config = {'tools.encode.on': False}
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -178,9 +215,9 @@ if __name__ == '__main__':
     parser = None
 
     # Instantiate additional complements - currently only CameraCalibration
-    from addons.cam_calibration.calibration import CameraCalibration
-    calibration = CameraCalibration()
-    cherrypy.tree.mount(calibration, '/calibration', calibration.cpconf)
+    # from addons.cam_calibration.calibration import CameraCalibration
+    # calibration = CameraCalibration()
+    # cherrypy.tree.mount(calibration, '/calibration', calibration.cpconf)
 
     # Start web app
     cherrypy.quickstart(webapp, '/', conf)
