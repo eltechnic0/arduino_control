@@ -137,37 +137,6 @@ class Controller(object):
     def __del__(self):
         _ = self.disconnect()
 
-class CameraCalibration(object):
-    def __init__(self):
-        self.file = 'cam_calibration.html'
-
-    @cherrypy.expose
-    def index(self):
-        return open('public/'+self.file)
-
-    @cherrypy.expose
-    def refresh(self):
-        import subprocess
-        args = "streamer -c /dev/video0 -o public/outfile.jpeg".split()
-        try:
-            res = subprocess.call(args)
-        except Exception as e:
-            cherrypy.engine.log('ERROR '+str(e))
-        return
-
-    @cherrypy.expose
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
-    def save(self):
-        rect = cherrypy.request.json
-        try:
-            with open("public/cam_calibration.json","w") as f:
-                json.dump(rect, f)
-        except Exception as e:
-            cherrypy.engine.log("ERROR " + str(e))
-            return False
-        return True
-
 
 if __name__ == '__main__':
     conf = {
@@ -179,7 +148,7 @@ if __name__ == '__main__':
         },
         '/static': {
             'tools.staticdir.on': True,
-            'tools.staticdir.dir': './public'
+            'tools.staticdir.dir': 'public'
         }
     }
     parser = argparse.ArgumentParser()
@@ -187,23 +156,31 @@ if __name__ == '__main__':
         help="name of the port that the arduino is connected to", action="store")
     parser.add_argument("-c", "--connect", action="store_true", default=False,
         help="connect to the serial device immediately")
-    parser.add_argument("-p", "--port", type=int, action="store", default=8080,
+    parser.add_argument("-p", "--port", type=int, action="store", default=8081,
         help="port number for the web server")
     parser.add_argument("-v", "--verbose", action="store_true", default=False,
         help="verbose communication. Only works when the --connect flag is given. \
             Otherwise verbose output is enabled")
     args = parser.parse_args()
-    # IP 0.0.0.0 accepts all incoming ips on the given port
+
+    # IP 0.0.0.0 accepts all incoming LAN ip's on the given port
     cherrypy.config.update(
     {'server.socket_host': os.getenv('IP', '0.0.0.0'),
     'server.socket_port': int(os.getenv('PORT', args.port)),
     })
+
+    # Serialobject plugin and main app init
     SerialObjectPlugin(args.serialport, cherrypy.engine).subscribe()
     webapp = Controller(quickstart=args.connect, verbose=args.verbose)
+
     # Delete parser object
     args = None
     parser = None
+
     # Instantiate additional complements - currently only CameraCalibration
-    webapp.calibration = CameraCalibration()
+    # from addons.cam_calibration.calibration import CameraCalibration
+    # calibration = CameraCalibration()
+    # cherrypy.tree.mount(calibration, '/calibration', calibration.conf)
+
     # Start web app
     cherrypy.quickstart(webapp, '/', conf)

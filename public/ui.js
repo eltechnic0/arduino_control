@@ -391,21 +391,15 @@ $(document).ready(function(){
     });
   });
 
-  var modalstate = false;
-  $("#calibration-trigger").click(function() {
-    if(modalstate == false){
-      modalstate = true;
-      $("#modal-container").attr("class","modal");
-      $("#modal-container").load("/calibration/index");
-      // $.get("/calibration/index").done(function(html) {
-      //   $("#modal-container").attr("class","modal");
-      //   console.log(html);
-      //   $("#modal-container").load(html);
-      // });
-    } else {
-      modalstate = false;
-      $("#modal-container").removeAttr("class");
-      $("#modal-container").empty();
-    }
+  $("#addon-list li").click(function() {
+    var url = $(this).attr("name");
+    window.open(url);
+    // $.post('/loadAddon'+url).done(function(result) {
+    //   if(result["success"] == true) {
+    //     window.open(url);
+    //   } else {
+    //     flashMessage(result['info']);
+    //   }
+    // });
   });
 });
