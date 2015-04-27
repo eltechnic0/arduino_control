@@ -178,9 +178,9 @@ if __name__ == '__main__':
     parser = None
 
     # Instantiate additional complements - currently only CameraCalibration
-    # from addons.cam_calibration.calibration import CameraCalibration
-    # calibration = CameraCalibration()
-    # cherrypy.tree.mount(calibration, '/calibration', calibration.conf)
+    from addons.cam_calibration.calibration import CameraCalibration
+    calibration = CameraCalibration()
+    cherrypy.tree.mount(calibration, '/calibration', calibration.cpconf)
 
     # Start web app
     cherrypy.quickstart(webapp, '/', conf)
