@@ -1,7 +1,7 @@
 import os
 import cherrypy
 from modules.plugin_serialobject import SerialObjectPlugin
-from modules.makotool import MakoTool
+from modules.makotool import TemplateTool
 import argparse
 import importlib
 import json
@@ -24,8 +24,9 @@ def is_connected():
         # supress normal handler
         return True
 
+path = os.path.abspath(os.getcwd())
 cherrypy.tools.is_connected = cherrypy._cptools.HandlerTool(is_connected)
-cherrypy.tools.render = MakoTool()
+cherrypy.tools.render = TemplateTool(path)
 
 class Controller(object):
 
@@ -48,17 +49,7 @@ class Controller(object):
                                         addon.cpconf)
                     addons.append(addon.addon_conf)
                     break
-            # with open(os.path.join('addons', parent, 'conf.json')) as f:
-            #     addons.append(json.load(f))
         self.addons = addons
-
-        # Template engine plugin
-        base_dir = os.path.abspath(os.getcwd())
-        from modules.makoplugin import MakoTemplatePlugin
-        cherrypy.engine.mako = MakoTemplatePlugin(cherrypy.engine,
-                            os.path.join(base_dir, 'public'))
-                            # os.path.join(base_dir, 'cache'))
-        cherrypy.engine.mako.subscribe()
 
         # Subscribe to the start channel to connect and disable verbosity when
         # the server is ready
@@ -71,13 +62,9 @@ class Controller(object):
                     'serial-write', ['verbose', 0])[0])
 
     @cherrypy.expose
-    @cherrypy.tools.render(template='ui.mako')
+    @cherrypy.tools.render(name='ui.mako')
     def index(self):
-        # return open('public/ui.html')
-        # cherrypy.response.status = 200
-        # return {'addons':self.addons}
-        pass
-    # index._cp_config = {'tools.encode.on': False}
+        return {'addons':self.addons}
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -181,7 +168,7 @@ if __name__ == '__main__':
         #     'engine.autoreload.on': False
         # },
         '/': {
-            'tools.staticdir.root': os.path.abspath(os.getcwd()),
+            'tools.staticdir.root': path,
         },
         '/static': {
             'tools.staticdir.on': True,
@@ -213,11 +200,6 @@ if __name__ == '__main__':
     # Delete parser object
     args = None
     parser = None
-
-    # Instantiate additional complements - currently only CameraCalibration
-    # from addons.cam_calibration.calibration import CameraCalibration
-    # calibration = CameraCalibration()
-    # cherrypy.tree.mount(calibration, '/calibration', calibration.cpconf)
 
     # Start web app
     cherrypy.quickstart(webapp, '/', conf)
