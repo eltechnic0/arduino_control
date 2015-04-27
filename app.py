@@ -1,6 +1,7 @@
 import os
 import cherrypy
 from modules.plugin_serialobject import SerialObjectPlugin
+from modules.makotool import TemplateTool
 import argparse
 import importlib
 import json
@@ -23,11 +24,33 @@ def is_connected():
         # supress normal handler
         return True
 
+path = os.path.abspath(os.getcwd())
 cherrypy.tools.is_connected = cherrypy._cptools.HandlerTool(is_connected)
+cherrypy.tools.render = TemplateTool(path)
 
 class Controller(object):
 
     def __init__(self, quickstart=False, verbose=False):
+        # Search for addons as folders inside the addons folder, and take the
+        # first non '__init__.py' file. Builds a list of addons' info and mounts
+        # them into the server tree
+        addons = []
+        for parent in os.listdir('addons/'):
+            for file in os.listdir(os.path.join('addons/', parent)):
+                # only one file allowed for each addon currently
+                name, extension = file.split('.')
+                if name != '__init__' and extension == 'py':
+                    module = importlib.import_module('.'.join(['addons',
+                                                                parent,
+                                                                name]))
+                    addon = module.AppAddon()
+                    cherrypy.tree.mount(addon,
+                                        addon.addon_conf['url'],
+                                        addon.cpconf)
+                    addons.append(addon.addon_conf)
+                    break
+        self.addons = addons
+
         # Subscribe to the start channel to connect and disable verbosity when
         # the server is ready
         if quickstart:
@@ -39,8 +62,9 @@ class Controller(object):
                     'serial-write', ['verbose', 0])[0])
 
     @cherrypy.expose
+    @cherrypy.tools.render(name='ui.mako')
     def index(self):
-        return open('public/ui.html')
+        return {'addons':self.addons}
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -144,7 +168,7 @@ if __name__ == '__main__':
         #     'engine.autoreload.on': False
         # },
         '/': {
-            'tools.staticdir.root': os.path.abspath(os.getcwd()),
+            'tools.staticdir.root': path,
         },
         '/static': {
             'tools.staticdir.on': True,
@@ -176,11 +200,6 @@ if __name__ == '__main__':
     # Delete parser object
     args = None
     parser = None
-
-    # Instantiate additional complements - currently only CameraCalibration
-    from addons.cam_calibration.calibration import AppAddon
-    calibration = AppAddon()
-    cherrypy.tree.mount(calibration, '/calibration', calibration.cpconf)
 
     # Start web app
     cherrypy.quickstart(webapp, '/', conf)
