@@ -1,6 +1,7 @@
-from cherrypy.process import wspbus, plugins
+from cherrypy.process import plugins
 from modules.serialobject import SerialInterface
 from serial import SerialException
+
 
 class SerialObjectPlugin(plugins.SimplePlugin):
     def __init__(self, portname, bus):
@@ -42,9 +43,5 @@ class SerialObjectPlugin(plugins.SimplePlugin):
                 result = self.serial.serial_write(data[0], [])
         except (ValueError, SerialException, AttributeError) as e:
             self.bus.log('ERROR ' + str(e))
-            return {'success':False,'data':None,'info':str(e)}
-        return {'success':True,'data':result,'info':None}
-
-    # def test(self, str=''):
-    #     self.bus.log(str)
-    #     return str
+            return {'success': False, 'data': None, 'info': str(e)}
+        return {'success': True, 'data': result, 'info': None}

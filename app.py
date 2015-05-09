@@ -5,7 +5,7 @@ from modules.makotool import TemplateTool
 import argparse
 import importlib
 import json
-import pdb
+
 
 def is_connected():
     """
@@ -17,7 +17,7 @@ def is_connected():
         cherrypy.response.status = 200
         # cherrypy.response.headers['Content-Type'] = 'text/plain'
         cherrypy.response.headers['Content-Type'] = 'application/json'
-        result = {'success':False,'info':'The serial object is disconnected'}
+        result = {'success': False, 'info': 'The serial object is disconnected'}
         result = json.dumps(result).encode('utf-8')
         cherrypy.response.body = result
         # cherrypy.response.body = [b"The serial object is disconnected."]
@@ -27,6 +27,7 @@ def is_connected():
 path = os.path.abspath(os.getcwd())
 cherrypy.tools.is_connected = cherrypy._cptools.HandlerTool(is_connected)
 cherrypy.tools.render = TemplateTool(path)
+
 
 class Controller(object):
 
@@ -44,8 +45,8 @@ class Controller(object):
                 if isnotinit and isaddon:
                     name, _ = file.split('.')
                     module = importlib.import_module('.'.join(['addons',
-                                                                parent,
-                                                                name]))
+                                                              parent,
+                                                              name]))
                     addon = module.AppAddon()
                     cherrypy.tree.mount(addon,
                                         addon.addon_conf['url'],
@@ -57,17 +58,19 @@ class Controller(object):
         # Subscribe to the start channel to connect and disable verbosity when
         # the server is ready
         if quickstart:
-            cherrypy.engine.subscribe('start',
+            cherrypy.engine.subscribe(
+                'start',
                 lambda: cherrypy.engine.publish('serial-connect')[0])
         if not verbose:
-            cherrypy.engine.subscribe('serial-just-connected',
+            cherrypy.engine.subscribe(
+                'serial-just-connected',
                 lambda: cherrypy.engine.publish(
                     'serial-write', ['verbose', 0])[0])
 
     @cherrypy.expose
     @cherrypy.tools.render(name='ui.mako')
     def index(self):
-        return {'addons':self.addons}
+        return {'addons': self.addons}
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -112,7 +115,9 @@ class Controller(object):
         pins = json['pins']
         values = json['values']
         settling = json['settling']
-        return cherrypy.engine.publish('serial-write', ['vset',pins,values,settling])[0]
+        return cherrypy.engine.publish(
+                    'serial-write',
+                    ['vset', pins, values, settling])[0]
 
     @cherrypy.expose
     @cherrypy.tools.is_connected()
@@ -120,14 +125,14 @@ class Controller(object):
     @cherrypy.tools.json_out()
     def serialVRead(self):
         pins = cherrypy.request.json['pins']
-        return cherrypy.engine.publish('serial-write', ['vread',pins])[0]
+        return cherrypy.engine.publish('serial-write', ['vread', pins])[0]
 
     @cherrypy.expose
     @cherrypy.tools.is_connected()
     @cherrypy.tools.json_out()
     def serialVerbose(self, value='true'):
         value = 1 if value == 'true' else 0
-        result = cherrypy.engine.publish('serial-write', ['verbose',value])[0]
+        result = cherrypy.engine.publish('serial-write', ['verbose', value])[0]
         return result
 
     @cherrypy.expose
@@ -140,14 +145,15 @@ class Controller(object):
         Returns [success:bool, msg:str]
         """
         fname = cherrypy.request.json['fname']
-        kwargs = {k:v for k,v in cherrypy.request.json.items() if k != 'fname'}
+        kwargs = {k: v for k, v in cherrypy.request.json.items()
+                  if k != 'fname'}
         try:
             module = importlib.import_module('addons.scripts.'+fname)
             script = module.AppScript(cherrypy)
         except (ImportError, AttributeError) as exc:
             cherrypy.engine.log('ERROR '+str(exc))
             msg = 'Error importing the script'
-            result = {'success':False, 'info':msg}
+            result = {'success': False, 'info': msg}
         else:
             try:
                 # Should not return anything for now
@@ -155,10 +161,10 @@ class Controller(object):
             except Exception as exc:
                 cherrypy.engine.log('ERROR '+str(exc))
                 msg = 'Error running the script'
-                result = {'success':False, 'info':msg}
+                result = {'success': False, 'info': msg}
             else:
                 msg = 'Script {} run successfully'.format(fname)
-                result = {'success':True, 'info':msg, 'data':data}
+                result = {'success': True, 'info': msg, 'data': data}
         return result
 
     def __del__(self):
@@ -179,22 +185,25 @@ if __name__ == '__main__':
         }
     }
     parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--serialport", type=str, default='/dev/ttyACM0',
-        help="name of the port that the arduino is connected to", action="store")
-    parser.add_argument("-c", "--connect", action="store_true", default=False,
+    parser.add_argument(
+        "-s", "--serialport", type=str, default='/dev/ttyACM0', action="store",
+        help="name of the port that the arduino is connected to")
+    parser.add_argument(
+        "-c", "--connect", action="store_true", default=False,
         help="connect to the serial device immediately")
-    parser.add_argument("-p", "--port", type=int, action="store", default=8081,
+    parser.add_argument(
+        "-p", "--port", type=int, action="store", default=8081,
         help="port number for the web server")
-    parser.add_argument("-v", "--verbose", action="store_true", default=False,
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", default=False,
         help="verbose communication. Only works when the --connect flag is given. \
             Otherwise verbose output is enabled")
     args = parser.parse_args()
 
     # IP 0.0.0.0 accepts all incoming LAN ip's on the given port
     cherrypy.config.update(
-    {'server.socket_host': os.getenv('IP', '0.0.0.0'),
-    'server.socket_port': int(os.getenv('PORT', args.port)),
-    })
+        {'server.socket_host': os.getenv('IP', '0.0.0.0'),
+         'server.socket_port': int(os.getenv('PORT', args.port)), })
 
     # Serialobject plugin and main app init
     SerialObjectPlugin(args.serialport, cherrypy.engine).subscribe()

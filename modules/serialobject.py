@@ -1,6 +1,7 @@
 from serial import Serial, SerialException
 from time import time, sleep
 
+
 class SerialInterface(object):
     """
     This is an interface class to the serial device for convenience. It relies
@@ -26,21 +27,21 @@ class SerialInterface(object):
         self.timeout = timeout
         self.serialObject = None
         self.commands = {
-            'comtest':{'params':0,'fun':self._comtest},
-            'vread':{'params':1,'fun':self._vread,'pins':(0,1,2,3,4,5)},
-            'vset':{'params':3,'fun':self._vset,'pins':(3,9,10,11)},
-            'verbose':{'params':1,'fun':self._verbose}}
+            'comtest': {'params': 0, 'fun': self._comtest},
+            'vread': {'params': 1, 'fun': self._vread, 'pins': (0,1,2,3,4,5)},
+            'vset': {'params': 3, 'fun': self._vset, 'pins': (3,9,10,11)},
+            'verbose': {'params': 1, 'fun': self._verbose}}
 
     def serial_write(self, cmd=None, params=None):
         """
         This is the function used to send data to the Arduino. It returns the
-        data read in the format [[data],[msg]]. More info in the `_read_response`
-        function.
+        data read in the format [[data],[msg]]. More info in the
+        `_read_response` function.
         """
         if cmd not in self.commands:
             raise ValueError('Unexpected command: {}'.format(cmd))
         if self.commands[cmd]['params'] != len(params):
-            raise ValueError('Expected {} params, got {}'.format(\
+            raise ValueError('Expected {} params, got {}'.format(
                 self.commands[cmd]['params'], len(params)))
         numreads = self.commands[cmd]['fun'](params)
         return list(self._read_response(numreads))
@@ -58,7 +59,7 @@ class SerialInterface(object):
         if len(pins) != len(values):
             raise ValueError('Inconsistent command')
         if any([x not in self.commands['vset']['pins'] for x in pins]):
-            raise ValueError('Valid pins are: {}'.format(\
+            raise ValueError('Valid pins are: {}'.format(
                 self.commands['vset']['pins']))
         values = list(map(int, values))
         if any([x > 255 or x < 0 for x in values]):
@@ -84,7 +85,7 @@ class SerialInterface(object):
         """
         pins = params[0]
         if any([x not in self.commands['vread']['pins'] for x in pins]):
-            raise ValueError('Valid pins are: {}'.format(\
+            raise ValueError('Valid pins are: {}'.format(
                 self.commands['vread']['pins']))
         for i in range(len(pins)):
             bstring = 'vread\n{}\n'.format(pins[i]).encode('utf-8')
@@ -92,38 +93,39 @@ class SerialInterface(object):
         return i+1
 
     def _verbose(self, params):
-        if params[0] not in (0,1):
-            raise ValueError('Verbosity value {} is not 0 or 1'.format(params[0]))
+        if params[0] not in (0, 1):
+            raise ValueError('Verbosity value {} is not 0 or 1'
+                             .format(params[0]))
         bstring = 'verbose\n{}\n'.format(params[0]).encode('utf-8')
         self.serialObject.write(bstring)
         return 1
 
     def _read_response(self, numreads=1):
         """
-        Reads all lines until an `OK:ready` message, for `numreads` times.
-        The data returned is [{"data":[data]|data,"msg":[msg]}], where data is the data returned between
-        an `OK:start` and an `OK:ready`, and msg contains all lines read as list.
-        A zero number of reads is allowed.
+        Reads all lines until an `OK:ready` message, for `numreads` times. The
+        data returned is [{"data":[data]|data,"msg":[msg]}], where data is the
+        data returned between an `OK:start` and an `OK:ready`, and msg contains
+        all lines read as list. A zero number of reads is allowed.
         """
         response = []
         data = []
         isdata = False
         timeout = self.timeout     # in seconds, for each message
-        i = 0;
+        i = 0
         before = time()
         while i < numreads:
             res = self.serialObject.readline()
             if not res:
-                return {"data":data, "msg":["No response... :-("]}
+                return {"data": data, "msg": ["No response... :-("]}
             res = res.decode('ascii', 'replace').strip()
             response.append(res)
             if res.startswith("OK:start"):
-                isdata = True;
+                isdata = True
                 continue
             if res.startswith("OK:ready"):
-                yield {"data":data, "msg":response}
+                yield {"data": data, "msg": response}
                 i += 1
-                isdata = False;
+                isdata = False
                 data = []
                 response = []
                 before = time()
@@ -131,7 +133,7 @@ class SerialInterface(object):
             if isdata:
                 data.append(res)
             if time() - before > timeout:
-                return {"data":data, "msg":["Timeout expired"]}
+                return {"data": data, "msg": ["Timeout expired"]}
 
     def connect(self, timeout=0.1):
         """

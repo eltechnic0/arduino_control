@@ -8,15 +8,17 @@ import numpy as np
 import json
 import matplotlib.pyplot as plt
 
-class Deviation(object):
-    """docstring for Deviation
-    :self.rect is [(x1, y1), (x2, y2)] for topleft and bottomright respectively.
 
+class Deviation(object):
+    """
     The class should be used like this::
-    1- Instantiate with a calibration file, which shouldn't change for the whole experiment
+    1- Instantiate with a calibration file, which shouldn't change for the whole
+     experiment
     2- Capture the image from the camera - capture(filename, device)
     3- Get the spot coords and optionally plot result - findspot(figpath)
     Repeat 2-3 as needed.
+
+    :self.rect is [(x1, y1), (x2, y2)] for topleft and bottomright respectively.
     """
     def __init__(self, calibrationfile):
         # the plotting backend switch is usually compulsory
@@ -37,8 +39,8 @@ class Deviation(object):
         with open(filename, 'r') as f:
             rect = json.load(f)
             self.rect = [(rect["topleft"]["x"], rect["topleft"]["y"]),
-                        (rect["bottomright"]["x"], rect["bottomright"]["y"])]
-            self.rect = [(int(x), int(y)) for x,y in self.rect]
+                         (rect["bottomright"]["x"], rect["bottomright"]["y"])]
+            self.rect = [(int(x), int(y)) for x, y in self.rect]
 
     def findspot(self, figpath=None, spotsize=15):
         """Find the coordinates of the laser spot based on choosing a bin of the
@@ -70,7 +72,7 @@ class Deviation(object):
         # plotting if there is a save path for the figure
         if figpath:
             plt.gray()
-            fig, ax = plt.subplots(1, 1, figsize=(5,5))
+            fig, ax = plt.subplots(1, 1, figsize=(5, 5))
             height, width = labelim.shape
             # bound axes to the grid ref sys
             ax.set_xlim(-100, 100)
@@ -84,8 +86,9 @@ class Deviation(object):
             # scale and position image on the right spot
             ax.imshow(impart, extent=[-100, 100, -100, 100], origin='upper')
             # plot white pixels as blue and leave the rest untouched
-            ax.imshow(rgbalabelim, extent=[-100, 100, -100, 100], origin='upper')
-            ax.plot(0, 0, '+', color='lime', markersize=10,markeredgewidth=1.5)
+            ax.imshow(rgbalabelim,
+                      extent=[-100, 100, -100, 100], origin='upper')
+            ax.plot(0, 0, '+', color='lime', markersize=10, markeredgewidth=1.5)
             # scale centroid to extents
             # TODO: check if its 200 or 201
             sx, sy = 200/width, 200/height
@@ -93,14 +96,14 @@ class Deviation(object):
                 # conversion to the coordinates of the grid - center at (0,0)
                 y, x = reg.centroid
                 x, y = x - width/2, -y + height/2
-                ax.plot(sx*x,sy*y,'+r',markersize=10,markeredgewidth=1)
+                ax.plot(sx*x, sy*y, '+r', markersize=10, markeredgewidth=1)
                 if i >= 19:
                     break
             fig.savefig(figpath, bbox_inches='tight')
         # still plot, but notify it didn't work
         if len(regions) > 1:
             return None
-        return x,y
+        return x, y
 
     def capture(self, filename, device):
         """Capture and save a snapshot from a webcam, then load it.
@@ -109,7 +112,7 @@ class Deviation(object):
         must be included and be in jpeg format.
         """
         args = 'streamer -c {} -o {}'.format(device, filename).split()
-        res = call(args)
+        _ = call(args)
         self.load_image(filename)
 
 
@@ -117,7 +120,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("-O", dest='outfig', action='store_false', default=True,
-        help='disable figure output')
+                        help='disable figure output')
     args = parser.parse_args()
     # dev = Deviation('../addons/cam_calibration/static/cam_calibration.json')
     # dev.load_image('../addons/cam_calibration/static/outfile.jpeg')
