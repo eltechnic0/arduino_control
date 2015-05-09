@@ -1,6 +1,6 @@
 # arduino_control
 
-Application to control an Arduino from a web interface
+Application to control an Arduino from a web interface.
 
 ## Running
 
@@ -21,9 +21,9 @@ stored in the scripts folder. For an example, see `script_test.py`.
 
 ### Running a script
 
-To run a script either use the web interface (not implemented yet) or make a
-request to `/serialScript` with the name of the script and the kwargs as json
-payload. For example:
+To run a script either use the web interface or make a request to
+`/serialScript` with the name of the script and the kwargs as json payload. For
+example:
 
 ```python
 requests.post('http://localhost:8080/serialScript',
@@ -31,6 +31,10 @@ requests.post('http://localhost:8080/serialScript',
 ```
 
 ### Available commands
+
+The following commands can be sent to the Arduino using the aforementioned
+convenience method. Use this list as a reference of the parameters for each
+command. For more information on the method's signature, see the docstrings.
 
 - `vset [pins:(3,9,10,11)] [values:(0-255)] settling:(0:inf)`
 

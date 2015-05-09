@@ -200,7 +200,7 @@
   </div>
   <div class="right-column">
     <div class="scripts">
-      <h1>Scripts</h1>
+      <h1>Plugins</h1>
       <table>
         <td>
           <textarea id="script-textbox" cols="35" rows="5"></textarea>
@@ -224,9 +224,6 @@
       % endfor
       </ul>
     </div>
-    <!-- <div id="calibration-trigger" class="clickable">
-      <h1>Camera calibration</h1>
-    </div> -->
     <div>
       <h1>Communications</h1>
       <ul class="clickable tight-list" id="comm-msg-hist-list">

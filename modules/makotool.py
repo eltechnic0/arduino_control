@@ -9,7 +9,7 @@ class TemplateTool(cherrypy.Tool):
 
 
   def __init__(self, path):
-    viewPath     = os.path.join(path, 'public')
+    viewPath     = os.path.join(path, 'static')
     self._engine = mako.lookup.TemplateLookup(directories = [viewPath])
 
     cherrypy.Tool.__init__(self, 'before_handler', self.render)

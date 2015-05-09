@@ -38,8 +38,11 @@ class Controller(object):
         for parent in os.listdir('addons/'):
             for file in os.listdir(os.path.join('addons/', parent)):
                 # only one file allowed for each addon currently
-                name, extension = file.split('.')
-                if name != '__init__' and extension == 'py':
+                isnotinit = file != '__init__.py'
+                isaddon = file.find('addon_') != -1
+                isaddon = isaddon and file.find('.py') != -1
+                if isnotinit and isaddon:
+                    name, _ = file.split('.')
                     module = importlib.import_module('.'.join(['addons',
                                                                 parent,
                                                                 name]))
@@ -139,7 +142,7 @@ class Controller(object):
         fname = cherrypy.request.json['fname']
         kwargs = {k:v for k,v in cherrypy.request.json.items() if k != 'fname'}
         try:
-            module = importlib.import_module('scripts.'+fname)
+            module = importlib.import_module('addons.scripts.'+fname)
             script = module.AppScript(cherrypy)
         except (ImportError, AttributeError) as exc:
             cherrypy.engine.log('ERROR '+str(exc))
@@ -172,7 +175,7 @@ if __name__ == '__main__':
         },
         '/static': {
             'tools.staticdir.on': True,
-            'tools.staticdir.dir': 'public'
+            'tools.staticdir.dir': 'static'
         }
     }
     parser = argparse.ArgumentParser()
