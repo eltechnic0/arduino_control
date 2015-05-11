@@ -2,6 +2,16 @@
 
 Application to control an Arduino from a web interface.
 
+## Dependencies
+
+- pyserial
+- cherrypy
+- mako
+- numpy
+- scipy
+- scikit-image
+- matplotlib
+
 ## Running
 
 Running with privileges is necessary to be able to connect to the serial device.

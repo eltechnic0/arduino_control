@@ -3,7 +3,7 @@ import os
 import math
 
 import cherrypy
-from addons.cam_calibration.deviation import Deviation
+from addons.camera.deviation import Deviation
 
 
 class AppAddon(object):
@@ -38,6 +38,7 @@ class AppAddon(object):
         self.static_path = ppath
         try:
             self.deviation = Deviation(os.path.join(ppath, calib_file))
+            self.deviation.load_image(self.image_file)
         except Exception as e:
             cherrypy.engine.log('ERROR '+str(e))
 
@@ -95,8 +96,8 @@ class AppAddon(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def characterize(self, device, spotsize=15, steps=10, radii=None,
-                     pins=(3, 9, 10, 11), settling=250):
+    def characterize(self, device, distance, gridsize, steps, radii,
+                     spotsize=15, pins=(3, 9, 10, 11), settling=250):
         """
         Returns data as a list of (radius,xgrid,ygrid,xcoord,ycoord,isok).
 

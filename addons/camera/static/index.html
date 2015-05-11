@@ -172,6 +172,12 @@
       img#cam-image {
         width:500px;
       }
+      .tight-list{
+        list-style-type:none;
+        padding:0px;
+        margin:0px;
+        max-width:500px;
+      }
     </style>
   </head>
   <body>
@@ -204,6 +210,35 @@
     </div>
     <div class="right-column">
       <h1>Characterization</h1>
+      <!-- <label>Distance: <input type="text" name="" value="" size="8"></label>
+      <label>Grid size: <input type="text" name="" value="" size="8"></label>
+      <label>Angle divisions: <input type="text" name="" value="" size="8"></label>
+      <label>Radii: <input type="text" name="" value="" size="8"></label> -->
+      <table>
+        <tr>
+          <td>Distance:</td>
+          <td><input type="text" name="distance" value="" size="8"></td>
+        </tr>
+        <tr>
+          <td>Grid size:</td>
+          <td><input type="text" name="size" value="" size="8"></td>
+        </tr>
+        <tr>
+          <td>Divisions:</td>
+          <td><input type="text" name="divisions" value="" size="8"></td>
+        </tr>
+        <tr>
+          <td>Voltages:</td>
+          <td><input type="text" name="voltages" value="" size="8"></td>
+        </tr>
+      </table>
+      <div class="space" style="margin-top:5px">
+        <button name="characterize-start">Start</button>
+        <button name="characterize-stop">Stop</button>
+      </div>
+      <h3>Result</h3>
+      <ul class="tight-list">
+      </ul>
     </div>
   </body>
 </html>
