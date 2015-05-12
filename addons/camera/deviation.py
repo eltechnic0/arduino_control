@@ -7,6 +7,7 @@ from subprocess import call
 import numpy as np
 import json
 import matplotlib.pyplot as plt
+import platform
 
 
 class Deviation(object):
@@ -111,7 +112,11 @@ class Deviation(object):
         :filename is the destination path for the snapshot image. Extension
         must be included and be in jpeg format.
         """
-        args = 'streamer -c {} -o {}'.format(device, filename).split()
+        plat = platform.system()
+        if plat == 'Windows':
+            args = 'streamer -c {} -o {}'.format(device, filename).split()
+        else:
+            args = 'streamer -c {} -o {}'.format(device, filename).split()
         _ = call(args)
         self.load_image(filename)
 
@@ -124,7 +129,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     # dev = Deviation('../addons/cam_calibration/static/cam_calibration.json')
     # dev.load_image('../addons/cam_calibration/static/outfile.jpeg')
-    dev = Deviation('static/cam_calibration.json')
+    dev = Deviation('static/calibration.json')
     dev.load_image('static/outfile.jpeg')
     if args.outfig:
         dev.findspot('static/processed.png')

@@ -1,10 +1,11 @@
-import os
-import cherrypy
-from modules.plugin_serialobject import SerialObjectPlugin
-from modules.makotool import TemplateTool
 import argparse
+import cherrypy
 import importlib
 import json
+from modules.plugin_serialobject import SerialObjectPlugin
+from modules.makotool import TemplateTool
+import os
+import platform
 
 
 def is_connected():
@@ -31,7 +32,8 @@ cherrypy.tools.render = TemplateTool(path)
 
 class Controller(object):
 
-    def __init__(self, quickstart=False, verbose=False):
+    # def __init__(self, quickstart=False, verbose=False):
+    def __init__(self, quickstart=False):
         # Search for addons as folders inside the addons folder, and take the
         # first non '__init__.py' file. Builds a list of addons' info and mounts
         # them into the server tree
@@ -61,11 +63,11 @@ class Controller(object):
             cherrypy.engine.subscribe(
                 'start',
                 lambda: cherrypy.engine.publish('serial-connect')[0])
-        if not verbose:
-            cherrypy.engine.subscribe(
-                'serial-just-connected',
-                lambda: cherrypy.engine.publish(
-                    'serial-write', ['verbose', 0])[0])
+        # if not verbose:
+        #     cherrypy.engine.subscribe(
+        #         'serial-just-connected',
+        #         lambda: cherrypy.engine.publish(
+        #             'serial-write', ['verbose', 0])[0])
 
     @cherrypy.expose
     @cherrypy.tools.render(name='ui.mako')
@@ -184,9 +186,14 @@ if __name__ == '__main__':
             'tools.staticdir.dir': 'static'
         }
     }
+    plat = platform.system()
+    if plat == 'Windows':
+        default = 'COM3'
+    else:
+        default = '/dev/ttyACM0'
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-s", "--serialport", type=str, default='/dev/ttyACM0', action="store",
+        "-s", "--serialport", type=str, default=default, action="store",
         help="name of the port that the arduino is connected to")
     parser.add_argument(
         "-c", "--connect", action="store_true", default=False,
@@ -194,10 +201,10 @@ if __name__ == '__main__':
     parser.add_argument(
         "-p", "--port", type=int, action="store", default=8081,
         help="port number for the web server")
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", default=False,
-        help="verbose communication. Only works when the --connect flag is given. \
-            Otherwise verbose output is enabled")
+    # parser.add_argument(
+    #     "-v", "--verbose", action="store_true", default=False,
+    #     help="verbose communication. Only works when the --connect flag is given. \
+    #         Otherwise verbose output is enabled")
     args = parser.parse_args()
 
     # IP 0.0.0.0 accepts all incoming LAN ip's on the given port
@@ -207,7 +214,8 @@ if __name__ == '__main__':
 
     # Serialobject plugin and main app init
     SerialObjectPlugin(args.serialport, cherrypy.engine).subscribe()
-    webapp = Controller(quickstart=args.connect, verbose=args.verbose)
+    # webapp = Controller(quickstart=args.connect, verbose=args.verbose)
+    webapp = Controller(quickstart=args.connect)
 
     # Delete parser object
     args = None

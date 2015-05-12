@@ -5,6 +5,7 @@ Application to control an Arduino from a web interface.
 ## Dependencies
 
 - pyserial
+- pyfirmata
 - cherrypy
 - mako
 - numpy

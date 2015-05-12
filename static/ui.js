@@ -134,6 +134,8 @@ $(document).ready(function(){
   });
 
   $("button#vset-button").click(function(){
+    // Expected format is: pin1 [pin2 pin3 pin4], val1 [val2 val3 val4], settling
+    // In other words, spaces separate values and commas separate fields
     var text = $(".vset input[name=batch]").val();
     if(text == []){
       return;

@@ -1,12 +1,12 @@
 from cherrypy.process import plugins
-from modules.serialobject import SerialInterface
+from modules.serial_controller import Arduino
 from serial import SerialException
 
 
 class SerialObjectPlugin(plugins.SimplePlugin):
     def __init__(self, portname, bus):
         plugins.SimplePlugin.__init__(self, bus)
-        self.serial = SerialInterface(portname)
+        self.serial = Arduino(portname)
 
     def start(self):
         self.bus.log('Instantiating serial object plugin')

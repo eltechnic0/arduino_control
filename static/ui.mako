@@ -72,13 +72,13 @@
       <button id="reconnect-button" name="reconnect">Reconnect</button>
       <button id="disconnect-button" name="disconnect">Disconnect</button>
       <h3 id="conn-state-text">Disconnected</h3>
-      <label><input type="checkbox" id="verbose-checkbox" value="">Verbose mode</label>
-      <button id="comtest-button" name="comtest">Comtest</button>
+      <!-- <label><input type="checkbox" id="verbose-checkbox" value="">Verbose mode</label>
+      <button id="comtest-button" name="comtest">Comtest</button> -->
     </div>
     <div class='vset'>
       <h1>VSet</h1>
       <div>
-        <input type="text" name="batch"/>
+        <input type="text" name="batch" value="p1 p2 p3 p4, v1 v2 v3 v4, ts"/>
         <button id="vset-button" name="send">Send</button>
         <table>
           <tr>
@@ -113,7 +113,7 @@
         </table>
       </div>
     </div>
-    <div class='vread'>
+    <!-- <div class='vread'>
       <h1>VRead</h1>
       <div>
         <input type="text" name="batch"/>
@@ -151,7 +151,7 @@
           </tr>
         </table>
       </div>
-    </div>
+    </div> -->
   </div>
   <div class="center-column">
     <div>
