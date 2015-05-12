@@ -7,6 +7,10 @@ REPORT_ANALOG_NOW_RESPONSE = 0x02    # SysEx command code in response to the mat
 class Arduino:
 
     def __init__(self, port):
+        """Initialize and connect to the board.
+
+        New commands should be registered in the commands dict.
+        """
         self.board = None
         self.port = port
         self.iterthread = None
@@ -19,11 +23,13 @@ class Arduino:
         self.disconnect()
 
     def connect(self):
+        """Connect to the board, attach custom SysEx handler, and do some inits.
+        """
         try:
             board = None
             board = pyfirmata.Arduino(self.port)
 
-            board.add_cmd_handler(REPORT_ANALOG_NOW_RESPONSE)
+            board.add_cmd_handler(REPORT_ANALOG_NOW_RESPONSE, self._handle_report_analog_now)
         except Exception as e:
             if board:
                 board.exit()
@@ -37,6 +43,9 @@ class Arduino:
             return True, 'Serial object connection successful'
 
     def disconnect(self):
+        """Reset the board, disconnect it and destroy the pyfirmata object,
+        along the reporting thread if it's running.
+        """
         if self.board:
             # send a reset command
             self.reset()
@@ -60,8 +69,11 @@ class Arduino:
     def serial_write(self, cmd=None, params=None):
         """This is the generic function used to send data to the Arduino.
 
+        Args:
+            cmd (str): command name as specified in __init__()
+            params (list): list of arguments for the command. Specified elsewhere.
         Returns:
-            None or any value read.
+            None or any value read, depending on the requested command.
         """
         if cmd not in self.commands:
             raise ValueError('Unexpected command: {}'.format(cmd))
@@ -69,9 +81,13 @@ class Arduino:
             raise ValueError('Expected {} params, got {}'.format(
                 self.commands[cmd]['params'], len(params)))
 
-        return self.commands[cmd]['fun'](params)
+        return self.commands[cmd]['fun'](*params)
 
     def sampling_interval(self, milis):
+        """Set the reporting sampling interval on the board.
+
+        Sampling is bounded to (10, 16383) ms.
+        """
         # minimum sampling interval supported is 10ms
         if milis > 16383:
             milis = 16383
@@ -88,22 +104,7 @@ class Arduino:
         """
         for pin, value in zip(pins, values):
             self.board.digital[pin].write(value)
-        time.sleep(settling/1000)
-
-    # def _vread(self, pins):
-    #     """Quickly read analog values from the board.
-    #
-    #     NOTE: reporting must first be enabled so that the values are refreshed.
-    #
-    #     Args:
-    #         pins (int list): any combination of (0,1,2,3,4,5)
-    #     Returns:
-    #         list of float values in the range 0..1, corresponding to the pin list
-    #     """
-    #     result = []
-    #     for pin in pins:
-    #         result.append(self.board.analog[pin].read())
-    #     return result
+        # time.sleep(settling/1000)
 
     def _vread(self, pins):
         """Conveniently read analog values from the board.
@@ -147,6 +148,13 @@ class Arduino:
         return result
 
     def _handle_report_analog_now(self, *args, **kwargs):
+        """Handler for our custom SysEx message, to be registered in the
+        pyFirmata object `self.board`.
+
+        This method accesses the `value` attribute somewhere inside
+        `self.board`, which is not too neat. However this avoids having to
+        subclass or fork the library in order to implement this functionality.
+        """
         for i in range(0, len(args), 3):
             pin, lsb, msb = args[i], args[i+1], args[i+2]
             value = round(float((msb << 7) + lsb) / 1023, 4)
@@ -154,12 +162,12 @@ class Arduino:
         self._vread_done = True
 
     def enable_reporting(self, sampling=1000):
-        """Enable reporting of all the analog pins. Without running this
-        function first, the values returned by vread() will remain unchanged."""
+        """Enable reporting of all the analog pins."""
         # start reader thread to catch reported values
         # the thread only stops when the serial connection is closed
-        it = pyfirmata.util.Iterator(board)
+        it = pyfirmata.util.Iterator(self.board)
         it.start()
+        it.daemonic = True  # stop the thread if main program quits
         self.iterthread = it
 
         for pin in (0,1,2,3,4,5):
@@ -168,7 +176,12 @@ class Arduino:
         self.sampling_interval(sampling)
 
     def _vsweep(out_pins, in_pins, out_values, settling):
-        """Perform a sweep of voltages. Reporting must be enabled to read meaningful data.
+        """Perform a sweep of voltages.
+
+        WARNING: It is quite blocking due to the settling waiting time and the
+        possibly long loop.
+
+        TODO: find a better implementation to avoid blocking the server.
 
         Args:
             out_pins (int list): example: (3,9)
@@ -188,9 +201,7 @@ class Arduino:
             # wait for settling time after all pins are written
             time.sleep(settling/1000)
             # collect the readings of the current step
-            step = []
-            for pin in in_pins:
-                step.append(self.board.analog[pin].read())
+            step = self._vread(in_pins)
             # append the steps together
             results.append(step)
         return results

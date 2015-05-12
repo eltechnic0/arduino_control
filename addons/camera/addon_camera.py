@@ -98,14 +98,18 @@ class AppAddon(object):
     @cherrypy.tools.json_out()
     def characterize(self, device, distance, gridsize, steps, radii,
                      spotsize=15, pins=(3, 9, 10, 11), settling=250):
-        """
-        Returns data as a list of (radius,xgrid,ygrid,xcoord,ycoord,isok).
+        """Returns data as a list of (radius,xgrid,ygrid,xcoord,ycoord,isok).
 
-        The function assumes that the calibration is already loaded.
+        This method assumes that the calibration is already loaded.
 
         Coordinates that could not be recognized have a value of None. Those
         that were not recognized with the requested `spotsize` have a value
         `isok` False.
+
+        WARNING: It is quite blocking due to the settling waiting time and the
+        possibly long loop.
+
+        TODO: find a better implementation to avoid blocking the server.
 
         :steps  number of divisions of 360º
         :radii sequence of numbers between 0 and 255
