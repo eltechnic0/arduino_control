@@ -202,6 +202,10 @@ $(document).ready(function(){
     value = Number(value);
 
     if(isNaN(value)) return;
+    if(value > 1.0 || value < 0.0) {
+      flashMessage("Invalid value",'error');
+      return;
+    }
 
     var data = JSON.stringify({pins:[pin],values:[value]});
     $.ajax({
