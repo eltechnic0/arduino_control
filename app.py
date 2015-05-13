@@ -116,10 +116,9 @@ class Controller(object):
         json = cherrypy.request.json
         pins = json['pins']
         values = json['values']
-        settling = json['settling']
         return cherrypy.engine.publish(
                     'serial-write',
-                    ['vset', pins, values, settling])[0]
+                    ['vset', pins, values])[0]
 
     @cherrypy.expose
     @cherrypy.tools.is_connected()

@@ -16,7 +16,7 @@ class Arduino:
         self.iterthread = None
         _ = self.connect()
         self.commands = {
-            'vset': {'params': 3, 'fun': self._vset},
+            'vset': {'params': 2, 'fun': self._vset},
             'vread': {'params': 1, 'fun': self._vread}}
 
     def __del__(self):
@@ -94,7 +94,7 @@ class Arduino:
         self.board.send_sysex(pyfirmata.SAMPLING_INTERVAL,
                               bytearray([milis % 128, milis >> 7]))
 
-    def _vset(self, pins, values, settling):
+    def _vset(self, pins, values):
         """Quickly send PWM values to the board.
 
         Args:
@@ -104,7 +104,6 @@ class Arduino:
         """
         for pin, value in zip(pins, values):
             self.board.digital[pin].write(value)
-        # time.sleep(settling/1000)
 
     def _vread(self, pins):
         """Conveniently read analog values from the board.

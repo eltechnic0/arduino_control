@@ -78,36 +78,31 @@
     <div class='vset'>
       <h1>VSet</h1>
       <div>
-        <input type="text" name="batch" placeholder="p1 ... p4, v1 ... v4, ts"/>
+        <input type="text" name="batch" placeholder="p1 ... p4, v1 ... v4"/>
         <button id="vset-button" name="send">Send</button>
         <table>
           <tr>
             <th>Pin</th>
             <th>Value</th>
-            <th>Settling</th>
           </tr>
           <tr>
             <td>3</td>
             <td><input type="text" name="value" size="4" value="0"/></td>
-            <td><input type="text" name="settling" size="4" value="250"/></td>
             <td><button name="0">Send</button></td>
           </tr>
           <tr>
             <td>9</td>
             <td><input type="text" name="value" size="4" value="0"/></td>
-            <td><input type="text" name="settling" size="4" value="250"/></td>
             <td><button name="1">Send</button></td>
           </tr>
           <tr>
             <td>10</td>
             <td><input type="text" name="value" size="4" value="0"/></td>
-            <td><input type="text" name="settling" size="4" value="250"/></td>
             <td><button name="2">Send</button></td>
           <tr>
           </tr>
             <td>11</td>
             <td><input type="text" name="value" size="4" value="0"/></td>
-            <td><input type="text" name="settling" size="4" value="250"/></td>
             <td><button name="3">Send</button></td>
           </tr>
         </table>

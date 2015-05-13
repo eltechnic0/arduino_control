@@ -134,47 +134,53 @@ $(document).ready(function(){
   });
 
   $("button#vset-button").click(function(){
-    // Expected format is: pin1 [pin2 pin3 pin4], val1 [val2 val3 val4], settling
-    // In other words, spaces separate values and commas separate fields
+    /*Expected format is: pin1 [pin2 pin3 pin4], val1 [val2 val3 val4]
+    In other words, spaces separate values and commas separate fields.
+    */
     var text = $(".vset input[name=batch]").val();
     if(text == []){
       return;
     }
     text = text.trim();
 
+    // split pins and values
     var parts = text.split(',');
     if(!$.isArray(parts)) {
       flashMessage("Invalid expression",'error');
       return;
     }
-    if(parts.length != 3) {
+    if(parts.length != 2) {
       flashMessage("Invalid expression",'error');
       return;
     }
+    // split pins
     var pins = parts[0].trim().split(' ').map(Number);
     if(pins.some(function(val){return isNaN(val);})) {
       flashMessage("Invalid expression",'error');
       return;
     }
+    // check if all valid pins
     if(pins.some(isValidVSetPin)) {
       flashMessage("Invalid pin",'error');
       return;
     }
+    // split values
     var values = parts[1].trim().split(' ').map(Number);
     if(values.some(function(val){return isNaN(val);})) {
       flashMessage("Invalid expression",'error');
       return;
     }
-    if(values.some(function(val){return val>255 || val<0})){
+    // check if valid values
+    if(values.some(function(val){return val > 1.0 || val < 0.0})){
       flashMessage("Invalid value",'error');
       return;
     }
+    // check for a value for every pin
     if(values.length != pins.length) {
       flashMessage("Invalid expression",'error');
       return;
     }
-    var settling = Number(parts[2]);
-    var data = JSON.stringify({pins:pins,values:values,settling:settling});
+    var data = JSON.stringify({pins:pins,values:values});
     $.ajax({
       url:'/serialVSet',
       method:'POST',
@@ -182,7 +188,7 @@ $(document).ready(function(){
       contentType: 'application/json'
     })
     .done(function(res){
-      appendToCmdHistory(res, 'vset '+pins+' '+values+' '+settling,
+      appendToCmdHistory(res, 'vset '+pins+' '+values,
         '{"cmd":"vset","input":'+data+'}');
     });
   });
@@ -194,12 +200,10 @@ $(document).ready(function(){
     var pin = pins[index];
     var value = $("input[name=value]", $(".vset table tr").eq(index+1)).val();
     value = Number(value);
-    var settling = $("input[name=settling]", $(".vset table tr").eq(index+1)).val();
-    settling = Number(settling);
 
-    if(isNaN(value) || isNaN(settling)) return;
+    if(isNaN(value)) return;
 
-    var data = JSON.stringify({pins:[pin],values:[value],settling:settling});
+    var data = JSON.stringify({pins:[pin],values:[value]});
     $.ajax({
       url:'/serialVSet',
       method:'POST',
@@ -207,7 +211,7 @@ $(document).ready(function(){
       contentType: 'application/json'
     })
     .done(function(res){
-      appendToCmdHistory(res, 'vset '+pin+' '+value+' '+settling,
+      appendToCmdHistory(res, 'vset '+pin+' '+value,
         '{"cmd":"vset","input":'+data+'}');
     });
   });
