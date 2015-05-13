@@ -87,22 +87,22 @@
           </tr>
           <tr>
             <td>3</td>
-            <td><input type="text" name="value" size="4" value="0"/></td>
+            <td><input type="text" name="value" size="4" placeholder="0..1"/></td>
             <td><button name="0">Send</button></td>
           </tr>
           <tr>
             <td>9</td>
-            <td><input type="text" name="value" size="4" value="0"/></td>
+            <td><input type="text" name="value" size="4" placeholder="0..1"/></td>
             <td><button name="1">Send</button></td>
           </tr>
           <tr>
             <td>10</td>
-            <td><input type="text" name="value" size="4" value="0"/></td>
+            <td><input type="text" name="value" size="4" placeholder="0..1"/></td>
             <td><button name="2">Send</button></td>
           <tr>
           </tr>
             <td>11</td>
-            <td><input type="text" name="value" size="4" value="0"/></td>
+            <td><input type="text" name="value" size="4" placeholder="0..1"/></td>
             <td><button name="3">Send</button></td>
           </tr>
         </table>
@@ -112,37 +112,31 @@
       <h1>VRead</h1>
       <div>
         <input type="text" name="batch" placeholder="p1 ... p4"/>
-        <button id="vread-button" name="send">Send</button>
+        <button id="vread-button" name="send">Read</button>
         <table>
           <tr>
             <th>Pin</th>
-            <th>Period</th>
-            <th></th>
             <th>Value</th>
           </tr>
           <tr>
             <td>0</td>
-            <td><input type="text" name="period" size="4" value="0"/></td>
-            <td><button name="0">Send</button></td>
-            <td class="vread-value">0</td>
+            <td class="vread-value">0.0</td>
+            <td><button name="0">Read</button></td>
           </tr>
           <tr>
             <td>1</td>
-            <td><input type="text" name="period" size="4" value="0"/></td>
-            <td><button name="1">Send</button></td>
-            <td class="vread-value">0</td>
+            <td class="vread-value">0.0</td>
+            <td><button name="1">Read</button></td>
           </tr>
           <tr>
             <td>2</td>
-            <td><input type="text" name="period" size="4" value="0"/></td>
-            <td><button name="2">Send</button></td>
-            <td class="vread-value">0</td>
+            <td class="vread-value">0.0</td>
+            <td><button name="2">Read</button></td>
           </tr>
           <tr>
             <td>3</td>
-            <td><input type="text" name="period" size="4" value="0"/></td>
-            <td><button name="3">Send</button></td>
-            <td class="vread-value">0</td>
+            <td class="vread-value">0.0</td>
+            <td><button name="3">Read</button></td>
           </tr>
         </table>
       </div>
