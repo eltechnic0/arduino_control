@@ -78,7 +78,7 @@
     <div class='vset'>
       <h1>VSet</h1>
       <div>
-        <input type="text" name="batch" value="p1 p2 p3 p4, v1 v2 v3 v4, ts"/>
+        <input type="text" name="batch" placeholder="p1 ... p4, v1 ... v4, ts"/>
         <button id="vset-button" name="send">Send</button>
         <table>
           <tr>
@@ -113,10 +113,10 @@
         </table>
       </div>
     </div>
-    <!-- <div class='vread'>
+    <div class='vread'>
       <h1>VRead</h1>
       <div>
-        <input type="text" name="batch"/>
+        <input type="text" name="batch" placeholder="p1 ... p4"/>
         <button id="vread-button" name="send">Send</button>
         <table>
           <tr>
@@ -151,7 +151,7 @@
           </tr>
         </table>
       </div>
-    </div> -->
+    </div>
   </div>
   <div class="center-column">
     <div>
