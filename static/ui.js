@@ -243,9 +243,9 @@ $(document).ready(function(){
     })
     .done(function(res){
       appendToCmdHistory(res, 'vread '+pins, '{"cmd":"vread","input":'+data+'}');
-      lim = Math.min(res["data"]["data"].length, 4);
+      lim = Math.min(res["data"].length, 4);
       for(var i = 0; i < lim; i++) {
-        $(".vread-value").eq(pins[i]).text(res["data"]["data"][i]);
+        $(".vread-value").eq(pins[i]).text(res["data"][i]);
       }
     });
   });
@@ -262,7 +262,7 @@ $(document).ready(function(){
     })
     .done(function(res){
       appendToCmdHistory(res, 'vread '+index,'{"cmd":"vread","input":'+data+'}');
-      $(".vread-value").eq(index).text(res["data"]["data"]);
+      $(".vread-value").eq(index).text(res["data"][0]);
     });
   });
 
