@@ -289,7 +289,7 @@ $(document).ready(function(){
     var pins = [right, top, left, bottom];
     var values = [0, 0, 0, 0];
 
-    var convert = function(x) {return Math.abs(Math.round(x/100*255));};
+    var convert = function(x) {return Math.abs(Math.round(x/100*1.0));};
     var x = convert(X);
     var y = convert(Y);
     if(X >= 0) values[0] = x; else values[2] = x;
