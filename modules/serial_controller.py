@@ -174,7 +174,7 @@ class Arduino:
 
         self.sampling_interval(sampling)
 
-    def _vsweep(out_pins, in_pins, out_values, settling):
+    def _vsweep(self, out_pins, in_pins, out_values, settling):
         """Perform a sweep of voltages.
 
         WARNING: It is quite blocking due to the settling waiting time and the

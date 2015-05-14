@@ -18,6 +18,7 @@ class SerialObjectPlugin(plugins.SimplePlugin):
 
     def stop(self):
         self.bus.log('Deleting serial object plugin')
+        self.disconnect()
         # self.bus.unsubscribe("serial-disconnect", self.disconnect)
 
     def connect(self):
