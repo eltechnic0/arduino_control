@@ -6,24 +6,38 @@ REPORT_ANALOG_NOW_RESPONSE = 0x02    # SysEx command code in response to the mat
 
 class Arduino:
 
-    def __init__(self, port):
+    def __init__(self, port, hiz_mode=False):
         """Initialize and connect to the board.
 
         New commands should be registered in the commands dict.
+
+        Args:
+            port (str): port name to give to the serial object. Usually 'COM3' on Windows, and '/dev/ttyACM0' or similar on Linux
+            hiz_mode (bool): whether to treat a 0V output as HI-Z by default
         """
         self.board = None
         self.port = port
         self.iterthread = None
-        _ = self.connect()
+        self.hiz_mode = hiz_mode
+        self.analog_inputs = (0,1,2,3,4,5)
+        self.pwm_outputs = (3,9,10,11)
+        # keys: PWM pins, values: corresponding HI-Z control pins
+        self.hiz_pins = {3:4, 9:5, 10:6, 11:7}
         self.commands = {
-            'vset': {'params': 2, 'fun': self._vset},
-            'vread': {'params': 1, 'fun': self._vread}}
+            'vset': {'fun': self._vset},
+            'vread': {'fun': self._vread}}
+        self._vread_done = False
+        _ = self.connect()
 
     def __del__(self):
         self.disconnect()
 
     def connect(self):
         """Connect to the board, attach custom SysEx handler, and do some inits.
+
+        Starting conditions:
+            All PWM outputs start at 0.0 volts.
+            If HI-Z mode is enabled, all outputs will be at HI-Z.
         """
         try:
             board = None
@@ -35,8 +49,15 @@ class Arduino:
                 board.exit()
             return False, str(e)
         else:
-            # initialize used PWM pins to zero volts
-            for i in (3, 9, 10, 11):
+            # initializations to be sent to the board go here
+            # HI-Z pins init
+            for pin in self.hiz_pins:
+                board.digital[pin].mode = pyfirmata.OUTPUT
+                # all outputs on HI-Z if the mode is enabled, and viceversa
+                state = 1 if self.hiz_mode else 0
+                board.digital[pin].write(state)
+            # PWM pins to zero volts
+            for i in self.pwm_outputs:
                 board.digital[i].mode = pyfirmata.PWM
                 board.digital[i].write(0.0)
             self.board = board
@@ -77,9 +98,6 @@ class Arduino:
         """
         if cmd not in self.commands:
             raise ValueError('Unexpected command: {}'.format(cmd))
-        if self.commands[cmd]['params'] != len(params):
-            raise ValueError('Expected {} params, got {}'.format(
-                self.commands[cmd]['params'], len(params)))
 
         return self.commands[cmd]['fun'](*params)
 
@@ -94,15 +112,22 @@ class Arduino:
         self.board.send_sysex(pyfirmata.SAMPLING_INTERVAL,
                               bytearray([milis % 128, milis >> 7]))
 
-    def _vset(self, pins, values):
+    def _vset(self, pins, values, zero_is_hiz=False):
         """Quickly send PWM values to the board.
 
         Args:
             pins (int list): any combination of (3,9,10,11)
             values (float list): in the range 0..1, corresponding to the pins list
-            settling (int): milis to wait
+            zero_is_hiz (bool): whether to treat a zero value as HI-Z output. If `hiz_mode` is `True`, this arg has no effect
         """
         for pin, value in zip(pins, values):
+            # get the HI-Z controller pin corresponding to the current PWM pin
+            hizpin = self.hiz_pins[pin]
+            # set digital pin controlling hf4066 IC switch accordingly
+            if (zero_is_hiz or self.hiz_mode) and value == 0.0:
+                self.board.digital[hizpin].write(1)
+            else:
+                self.board.digital[hizpin].write(0)
             self.board.digital[pin].write(value)
 
     def _vread(self, pins):
@@ -169,7 +194,7 @@ class Arduino:
         it.daemonic = True  # stop the thread if main program quits
         self.iterthread = it
 
-        for pin in (0,1,2,3,4,5):
+        for pin in self.analog_inputs:
             self.board.analog[pin].enable_reporting()
 
         self.sampling_interval(sampling)
