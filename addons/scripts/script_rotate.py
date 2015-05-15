@@ -6,9 +6,8 @@ class AppScript(Script):
     def __init__(self, cherry):
         Script.__init__(self, cherry)
         self.data = []
-        _ = self.serial_write('verbose', [0])   # disable verbosity
 
-    def run(self, steps=10, radius=None, pins=(3, 9, 10, 11), settling=250):
+    def run(self, steps=10, radius=None, pins=(3, 9, 10, 11)):
         """
         :pins   [right top left bottom]
         """
@@ -20,6 +19,6 @@ class AppScript(Script):
             j = 1 if valy > 0 else 3
             values[i] = int(abs(valx))
             values[j] = int(abs(valy))
-            _ = self.serial_write('vset', [pins, values, settling])
+            _ = self.serial_write('vset', [pins, values])
             self.data.append(valx, valy)
         return self.data

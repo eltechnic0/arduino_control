@@ -2,7 +2,7 @@ from modules.app_script import Script
 
 
 class AppScript(Script):
-    def __init(self, cherry):
+    def __init__(self, cherry):
         Script.__init__(self, cherry)
 
     def run(self, string=None, array=None):
