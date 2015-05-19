@@ -13,6 +13,8 @@ Application to control an Arduino from a web interface.
 - scikit-image
 - matplotlib
 
+Additionally, the camera addon uses the program CommandCam.exe, developed by Ted Burke and available at [github](https://github.com/tedburke/CommandCam). For convenience however, the executable is included in the camera addon folder of the repository.
+
 ## Running
 
 Running with privileges is necessary to be able to connect to the serial device.

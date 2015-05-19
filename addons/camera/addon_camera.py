@@ -14,8 +14,8 @@ class AppAddon(object):
                  proc_file='processed.png',
                  addon_path='addons/camera'):
         """
-        :url is the mount point
-        :text is the displayed text
+        `url` is the mount point in the app.
+        `text` is the displayed text in the main ui.
         """
         self.addon_conf = {
             'url': '/camera',
@@ -98,7 +98,8 @@ class AppAddon(object):
     @cherrypy.tools.json_out()
     def characterize(self, device, distance, gridsize, steps, radii,
                      spotsize=15, pins=(3, 9, 10, 11), settling=250):
-        """Returns data as a list of (radius,xgrid,ygrid,xcoord,ycoord,isok).
+        """Characterize voltage vs. deviation coords automatically. The result
+        is stored in a file called `characterization.json`.
 
         This method assumes that the calibration is already loaded.
 
@@ -111,9 +112,14 @@ class AppAddon(object):
 
         TODO: find a better implementation to avoid blocking the server.
 
-        :steps  number of divisions of 360º
-        :radii sequence of numbers between 0 and 255
-        :pins   (right top left bottom)
+        Args:
+            device (str): device name
+            steps (int):  number of divisions of 360º
+            radii (float list): sequence of numbers between 0..1
+            pins (int list): pin correspondance (right top left bottom)
+
+        Returns:
+            list of (radius,xgrid,ygrid,xcoord,ycoord,isok)
         """
         dev = self.deviation
         data = []
@@ -145,4 +151,6 @@ class AppAddon(object):
                                     coords[0], coords[1], False))
                     continue
                 data.append((radius, valx, valy, coords[0], coords[1], True))
+        with open('characterization.json', 'w') as f:
+            json.dump(data, f)
         return {'success': True, 'data': data, 'info': 'Characterization'}

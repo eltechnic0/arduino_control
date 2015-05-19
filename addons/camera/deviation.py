@@ -1,28 +1,27 @@
+import json
+import matplotlib.pyplot as plt
+import numpy as np
+import platform
+from scipy.ndimage import label
 from skimage.io import imread
 from skimage.measure import regionprops
 from skimage.morphology import disk as mdisk
 from skimage.morphology import binary_opening
-from scipy.ndimage import label
 from subprocess import call
-import numpy as np
-import json
-import matplotlib.pyplot as plt
-import platform
 
 
 class Deviation(object):
-    """
-    The class should be used like this::
+    """The class should be used like this:
     1- Instantiate with a calibration file, which shouldn't change for the whole
-     experiment
+        experiment
     2- Capture the image from the camera - capture(filename, device)
     3- Get the spot coords and optionally plot result - findspot(figpath)
     Repeat 2-3 as needed.
 
-    :self.rect is [(x1, y1), (x2, y2)] for topleft and bottomright respectively.
+    `self.rect` is [(x1, y1), (x2, y2)] for topleft and bottomright respectively.
     """
     def __init__(self, calibrationfile):
-        # the plotting backend switch is usually compulsory
+        # the plotting backend switch is usually required
         self.load_calibration(calibrationfile)
         print('Plotting backend:', plt.get_backend())
         print('Switching to Agg...')
@@ -46,8 +45,13 @@ class Deviation(object):
     def findspot(self, figpath=None, spotsize=15):
         """Find the coordinates of the laser spot based on choosing a bin of the
         image histogram with an amount of bright pixels lower than `spotsize`.
-        :figpath specifies the path for the plot, or no plot if not given.
-        :spotsize is the number of pixels considered sufficient to be a spot.
+
+        Args:
+            figpath (str): specifies the path for the plot, or no plot if not given.
+            spotsize (int): is the number of pixels considered sufficient to be a spot.
+
+        Returns:
+            found coordinates as (coordx, coordy)
         """
         rect = self.rect
         # working only on the red channel
@@ -108,13 +112,22 @@ class Deviation(object):
 
     def capture(self, filename, device):
         """Capture and save a snapshot from a webcam, then load it.
-        :device is the name of capture device. Example: Linux '/dev/video0'.
-        :filename is the destination path for the snapshot image. Extension
-        must be included and be in jpeg format.
+
+        CommandCam.exe most useful options:
+            /devname    select device by name as seen with /devlist
+            /devnum     select device by number
+            /devlist    list devices
+            /filename   captured image destination file
+
+        Args:
+            device (str): name of the capture device. Example: Linux '/dev/video0'.
+            filename (str): is the destination path for the snapshot image.
+                Extension must be included and be in jpeg format.
         """
         plat = platform.system()
         if plat == 'Windows':
-            args = 'streamer -c {} -o {}'.format(device, filename).split()
+            # TODO: check if it works
+            args = 'CommandCam.exe /devname {} /filename {}'.format(device, filename).split()
         else:
             args = 'streamer -c {} -o {}'.format(device, filename).split()
         _ = call(args)
@@ -127,8 +140,6 @@ if __name__ == '__main__':
     parser.add_argument("-O", dest='outfig', action='store_false', default=True,
                         help='disable figure output')
     args = parser.parse_args()
-    # dev = Deviation('../addons/cam_calibration/static/cam_calibration.json')
-    # dev.load_image('../addons/cam_calibration/static/outfile.jpeg')
     dev = Deviation('static/calibration.json')
     dev.load_image('static/outfile.jpeg')
     if args.outfig:
