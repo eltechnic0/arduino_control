@@ -168,6 +168,14 @@ class Controller(object):
                 result = {'success': True, 'info': msg, 'data': data}
         return result
 
+    @cherrypy.expose
+    @cherrypy.tools.is_connected()
+    @cherrypy.tools.json_out()
+    def serial_hiz_mode(self, hiz):
+        hiz = True if hiz == 'true' else False
+        _ = cherrypy.engine.publish('serial-hiz-mode', hiz)
+        return {'success': True, 'info': None, 'data': None}
+
     def __del__(self):
         _ = self.disconnect()
 

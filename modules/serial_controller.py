@@ -27,7 +27,6 @@ class Arduino:
             'vset': {'fun': self._vset},
             'vread': {'fun': self._vread}}
         self._vread_done = False
-        _ = self.connect()
 
     def __del__(self):
         self.disconnect()

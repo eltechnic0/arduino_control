@@ -5,7 +5,7 @@ $(document).ready(function(){
   var scriptHistMax = 10;
 
   $.get("/isConnected").done(function(value) {
-    str = value == 1 ? "Connected" : "Disconnected";
+    str = (value === true) ? "Connected" : "Disconnected";
     connStateText.text(str);
   });
 
@@ -29,7 +29,7 @@ $(document).ready(function(){
     var histlist = $("#comm-msg-hist-list");
     var url, obj;
     // TODO: handle data printing??
-    if(result['success'] == true) {
+    if(result['success'] === true) {
       flashMessage(flashtext,'success');
       var item = $("<li>"+cmdtext+"</li>").click(execComHistItem);
       histlist.append(item);
@@ -75,7 +75,7 @@ $(document).ready(function(){
       contentType: 'application/json'
     })
     .done(function(res){
-      if(res["success"] == true) {
+      if(res["success"] === true) {
         flashMessage(obj["cmd"],'success');
       } else {
         flashMessage(res["info"],'error');
@@ -102,11 +102,11 @@ $(document).ready(function(){
   window.app = {flashMessage: flashMessage};
 
   function isValidVSetPin(val) {
-    return [3,9,10,11].indexOf(val) == -1;
+    return [3,9,10,11].indexOf(val) === -1;
   }
 
   function isValidVReadPin(val) {
-    return [0,1,2,3].indexOf(val) == -1;
+    return [0,1,2,3].indexOf(val) === -1;
   }
 
   $("button#connect-button").click(function(){
@@ -138,7 +138,7 @@ $(document).ready(function(){
     In other words, spaces separate values and commas separate fields.
     */
     var text = $(".vset input[name=batch]").val();
-    if(text == []){
+    if(text === []){
       return;
     }
     text = text.trim();
@@ -149,7 +149,7 @@ $(document).ready(function(){
       flashMessage("Invalid expression",'error');
       return;
     }
-    if(parts.length != 2) {
+    if(parts.length !== 2) {
       flashMessage("Invalid expression",'error');
       return;
     }
@@ -176,7 +176,7 @@ $(document).ready(function(){
       return;
     }
     // check for a value for every pin
-    if(values.length != pins.length) {
+    if(values.length !== pins.length) {
       flashMessage("Invalid expression",'error');
       return;
     }
@@ -222,7 +222,7 @@ $(document).ready(function(){
 
   $("button#vread-button").click(function(){
     var text = $(".vread input[name=batch]").val();
-    if(text == []){
+    if(text === []){
       return;
     }
     text = text.trim();
@@ -309,7 +309,7 @@ $(document).ready(function(){
     $(".grid-opts input[name=y]").val(Y);
 
     var value = $("#autosend-checkbox").is(":checked");
-    if(value == true) {
+    if(value === true) {
 
       data = getVSetEquivalent(X, Y);
       var pins = data[0];
@@ -380,7 +380,7 @@ $(document).ready(function(){
 
   $(".scripts button").click(function() {
     var text = $("#script-textbox").val();
-    if(text=="") return;
+    if(text === "") return;
     try{
       var cmd = JSON.parse(text);
     } catch(err) {
@@ -395,7 +395,7 @@ $(document).ready(function(){
     })
     .done(function(result){
       appendToCmdHistory(result, cmd['fname'], '{"cmd":"script","input":'+text+'}');
-      if(result['success'] == true) {
+      if(result['success'] === true) {
         appendToScriptHistory(text);
       }
     });
@@ -412,4 +412,17 @@ $(document).ready(function(){
     //   }
     // });
   });
+
+  $("#hizmode-checkbox").click(function(){
+    var value = $("#hizmode-checkbox").is(":checked")
+    $.post("/serial_hiz_mode", {hiz:value}).done(function(result){
+      var state = (value) ? "enabled" : "disabled";
+      if(result["success"] === true) {
+        flashMessage("Hi-Z mode " + state, 'success');
+      } else {
+        flashMessage(result['info'], 'error');
+      }
+    });
+  });
+
 });

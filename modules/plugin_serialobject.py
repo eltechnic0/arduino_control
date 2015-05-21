@@ -10,16 +10,15 @@ class SerialObjectPlugin(plugins.SimplePlugin):
 
     def start(self):
         self.bus.log('Instantiating serial object plugin')
-        # self.bus.subscribe("plugin-test", self.test)
         self.bus.subscribe("serial-connect", self.connect)
         self.bus.subscribe("serial-disconnect", self.disconnect)
         self.bus.subscribe("serial-isconnected", self.is_connected)
         self.bus.subscribe("serial-write", self.serial_write)
+        self.bus.subscribe("serial-hiz-mode", self.serial_hiz_mode)
 
     def stop(self):
         self.bus.log('Deleting serial object plugin')
         self.disconnect()
-        # self.bus.unsubscribe("serial-disconnect", self.disconnect)
 
     def connect(self):
         result = self.serial.connect()
@@ -46,3 +45,6 @@ class SerialObjectPlugin(plugins.SimplePlugin):
             self.bus.log('ERROR ' + str(e))
             return {'success': False, 'data': None, 'info': str(e)}
         return {'success': True, 'data': result, 'info': None}
+
+    def serial_hiz_mode(self, hiz):
+        self.serial.hiz_mode = hiz

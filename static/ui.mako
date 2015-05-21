@@ -106,6 +106,9 @@
             <td><button name="3">Send</button></td>
           </tr>
         </table>
+        <div>
+          <label><input type="checkbox" id="hizmode-checkbox" value="">Hi-Z mode</label>
+        </div>
       </div>
     </div>
     <div class='vread'>
