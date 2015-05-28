@@ -22,10 +22,13 @@ class Arduino:
         self.analog_inputs = (0,1,2,3,4,5)
         self.pwm_outputs = (3,9,10,11)
         # keys: PWM pins, values: corresponding HI-Z control pins
-        self.hiz_pins = {3:4, 9:5, 10:6, 11:7}
+        self.hiz_pins = {3:7, 9:8, 10:12, 11:13}
+        self.sw_pins = (2,4,5,6)
+        self._sw_state = None
         self.commands = {
             'vset': {'fun': self._vset},
-            'vread': {'fun': self._vread}}
+            'vread': {'fun': self._vread},
+            'sw_control': {'fun': self._sw_control}}
         self._vread_done = False
 
     def __del__(self):
@@ -49,6 +52,12 @@ class Arduino:
             return False, str(e)
         else:
             # initializations to be sent to the board go here
+
+            # switch control pins initializations
+            for pin in self.sw_pins:
+                board.digital[pin].mode = pyfirmata.OUTPUT
+                # all outputs on HI-Z
+                self._sw_control('hiz')
             # HI-Z pins init
             for pin in self.hiz_pins:
                 board.digital[pin].mode = pyfirmata.OUTPUT
@@ -228,3 +237,62 @@ class Arduino:
             # append the steps together
             results.append(step)
         return results
+
+    def _sw_control(self, cmd, duration=0.0):
+        """Function controlling the switch actions.
+
+        Switch control terminals (a,b,c,d) are assumed to be connected to the
+        pins set in self.sw_pins. A and B are the outputs of the switches, with
+        (a,b) connected to A, and (c,d) to B. Values of 0 are assumed to open
+        the switch. Switches (a,b,c,d) inputs are assumed to be connected to
+        (V+,0,V+,0).
+
+        a b c d | A  B  cmd
+        --------------------
+        1 0 0 1 | V+ 0  a
+        0 1 1 0 | 0  V+ b
+        0 1 0 1 | 0  0  0
+        1 0 1 0 | V+ V+ v+
+        0 0 0 0 | Z  Z  z
+
+        Additional commands (cmd):
+            'flip': changes between 'a' and 'b'
+            'pulse_a': sets state 'a' for `duration`, then sets 'hiz'
+            'pulse_b': sets state 'b' for `duration`, then sets 'hiz'
+
+        Args:
+            cmd (str): selected command
+            duration (float): pulse width in miliseconds
+        """
+        def write_pins(vals):
+            for i, pin in enumerate(self.sw_pins):
+                self.board.digital[pin].write(vals[i])
+
+        if cmd == 'a':
+            write_pins((1,0,0,1))
+            self._sw_state = 'a'
+        elif cmd == 'pulse_a':
+            write_pins((1,0,0,1))
+            time.sleep(duration)
+            write_pins((0,0,0,0))
+        elif cmd == 'b':
+            write_pins((0,1,1,0))
+            self._sw_state = 'b'
+        elif cmd == 'pulse_b':
+            write_pins((0,1,1,0))
+            time.sleep(duration)
+            write_pins((0,0,0,0))
+        elif cmd == 'v+':
+            write_pins((0,1,0,1))
+        elif cmd == '0':
+            write_pins((1,0,1,0))
+        elif cmd == 'z':
+            write_pins((0,0,0,0))
+        elif cmd == 'flip':
+            # change between 'a' and 'b', or goto 'a' otherwise
+            if self._sw_state == 'a':
+                self._sw_state = 'b'
+                write_pins((0,1,1,0))
+            else:
+                self._sw_state = 'a'
+                write_pins((1,0,0,1))
