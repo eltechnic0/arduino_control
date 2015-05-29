@@ -49,10 +49,6 @@ requests.post('http://localhost:8080/serialScript',
   data={'fname':'script_test','string':'Hello world!'})
 ```
 
-## Addons
-
-These provide more flexibility than a script at the cost of more writing. They are basically composed of a python module that is attached to the server, and an html ui with its js scripts and other resources. The folder structure to use is similar to the camera addon, so check that one for reference.
-
 ### Available commands
 
 The following commands can be sent to the Arduino using the aforementioned
@@ -62,6 +58,10 @@ command. For more information on the method's signature, see the docstrings.
 - `vset [pins:(3,9,10,11)] [values:(0-255)] settling:(0:inf)`
 
 - `vread [pins:(0,1,2,3,4,5)]`
+
+## Addons
+
+These provide more flexibility than a script at the cost of more writing. They are basically composed of a python module that is attached to the server, and an html ui with its js scripts and other resources. The folder structure to use is similar to the camera addon, so check that one for reference.
 
 ## Console mode
 
