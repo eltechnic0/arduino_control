@@ -1,8 +1,10 @@
 # arduino_control
 
-Application to control an Arduino from a web interface.
+This is a very specific application designed to control an EWOD experiment using an Arduino from a web interface.
 
 ## Dependencies
+
+The app works under Ubuntu 15.04 and Windows 8 (older versions probably too). The following packages must be present in the python installation to make it work:
 
 - pyserial
 - pyfirmata
@@ -17,11 +19,15 @@ Additionally, the camera addon uses the program CommandCam.exe, developed by Ted
 
 ## Running
 
-Running with privileges is necessary to be able to connect to the serial device.
+On Windows, where the Arduino is usually on the `COM3` port:
 
-`sudo python3 app.py --serialport '/dev/ttyACM0'`
+`python app.py`
 
-For more options type `python3 app.py --help`.
+On Ubuntu, running with privileges is necessary to be able to connect to the serial device. On my machine, the Arduino is on `/dev/ttyACM0`:
+
+`sudo python3 app.py`
+
+For more options add the `--help` argument, e.g. `python3 app.py --help`.
 
 ## Custom scripts
 
@@ -53,6 +59,10 @@ command. For more information on the method's signature, see the docstrings.
 
 - `vread [pins:(0,1,2,3,4,5)]`
 
-- `verbose [flag:(0,1)]`
+## Addons
 
-- `comtest`
+These provide more flexibility than a script at the cost of more writing. They are basically composed of a python module that is attached to the server, and an html ui with its js scripts and other resources. The folder structure to use is similar to the camera addon, so check that one for reference.
+
+## Console mode
+
+Sometimes the web interface might not be very convenient, especially when experimenting with new things. In these cases, the `serial_controller` file in the modules folder is still very easy to use and effective in controlling the Arduino manually.
