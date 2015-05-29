@@ -283,9 +283,9 @@ class Arduino:
             time.sleep(duration)
             write_pins((0,0,0,0))
         elif cmd == 'v+':
-            write_pins((0,1,0,1))
-        elif cmd == '0':
             write_pins((1,0,1,0))
+        elif cmd == '0':
+            write_pins((0,1,0,1))
         elif cmd == 'z':
             write_pins((0,0,0,0))
         elif cmd == 'flip':
