@@ -4,7 +4,7 @@ This is a very specific application designed to control an EWOD experiment using
 
 ## Dependencies
 
-The app works under Ubuntu 15.04 and Windows 8 (older versions probably too). The following packages must be present in the python installation to make it work:
+The app works under Ubuntu 15.04 and Windows 8, 10 (older versions probably too). The following packages must be present in the python installation to make it work:
 
 - pyserial
 - pyfirmata
@@ -30,6 +30,8 @@ On Ubuntu, running with privileges is necessary to be able to connect to the ser
 For more options add the `--help` argument, e.g. `python3 app.py --help`.
 
 ## Custom scripts
+
+Scripts are intended to be used for simple repetitive tasks, for more elaborate extensions see `Addons`.
 
 ### Writing a custom script
 
@@ -65,4 +67,4 @@ These provide more flexibility than a script at the cost of more writing. They a
 
 ## Console mode
 
-Sometimes the web interface might not be very convenient, especially when experimenting with new things. In these cases, the `serial_controller` file in the modules folder is still very easy to use and effective in controlling the Arduino manually.
+Sometimes the web interface might not be very convenient, especially when experimenting with new things. In these cases, the `serial_controller` file in the modules folder is still very easy to use and effective in controlling the Arduino manually. The file `experiments_convenience_functions.py` has some extra helper functions.
