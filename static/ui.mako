@@ -6,7 +6,8 @@
   <meta charset="utf-8" />
   <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+  <!--<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>-->
+  <script type="text/javascript" src="/static/jquery-2.1.4.min.js"></script>
   <script type="text/javascript" src="/static/jquery.noty.packaged.min.js"></script>
   <script src="/static/ui.js"></script>
   <style>
