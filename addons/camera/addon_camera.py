@@ -37,7 +37,7 @@ class AppAddon(object):
         self.proc_file = os.path.join(ppath, proc_file)
         self.static_path = ppath
         try:
-            self.deviation = Deviation(os.path.join(ppath, calib_file))
+            self.deviation = Deviation(self.calib_file, addon_path)
             self.deviation.load_image(self.image_file)
         except Exception as e:
             cherrypy.engine.log('ERROR '+str(e))

@@ -1,6 +1,7 @@
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 import platform
 from scipy.ndimage import label
 from skimage.io import imread
@@ -20,9 +21,14 @@ class Deviation(object):
 
     `self.rect` is [(x1, y1), (x2, y2)] for topleft and bottomright respectively.
     """
-    def __init__(self, calibrationfile):
+    def __init__(self, calibrationfile, addon_path=None):
         # the plotting backend switch is usually required
-        self.load_calibration(calibrationfile)
+        try:
+            self.load_calibration(calibrationfile)
+        except FileNotFoundError:
+            self.rect = None
+        # needed to reference the CommandCam.exe program on Windows
+        self.addon_path = addon_path
         print('Plotting backend:', plt.get_backend())
         print('Switching to Agg...')
         plt.switch_backend('Agg')
@@ -31,7 +37,10 @@ class Deviation(object):
     def load_image(self, filename):
         """Load an image file.
         """
-        self.image = imread(filename)
+        try:
+            self.image = imread(filename)
+        except FileNotFoundError:
+            self.image = None
 
     def load_calibration(self, filename):
         """Load a calibration file.
@@ -44,7 +53,7 @@ class Deviation(object):
 
     def findspot(self, figpath=None, spotsize=15):
         """Find the coordinates of the laser spot based on choosing a bin of the
-        image histogram with an amount of bright pixels lower than `spotsize`.
+        image histogram with an amount of bright pixels bigger than `spotsize`.
 
         Args:
             figpath (str): specifies the path for the plot, or no plot if not given.
@@ -53,6 +62,8 @@ class Deviation(object):
         Returns:
             found coordinates as (coordx, coordy)
         """
+        if self.rect == None or self.image == None:
+            return None
         rect = self.rect
         # working only on the red channel
         impart = self.image[rect[0][1]:rect[1][1]+1, rect[0][0]:rect[1][0]+1, 0]
@@ -63,8 +74,7 @@ class Deviation(object):
             # search for minimum number of bright pixels
             if sum(hvals[index:]) > spotsize:
                 break
-            else:
-                index -= 1
+            index -= 1
         binary = impart >= bins[index]
         labelim, _ = label(binary)
         regions = regionprops(labelim)
@@ -97,6 +107,7 @@ class Deviation(object):
             # scale centroid to extents
             # TODO: check if its 200 or 201
             sx, sy = 200/width, 200/height
+            # plot even if there is more than one region
             for i, reg in enumerate(regions):
                 # conversion to the coordinates of the grid - center at (0,0)
                 y, x = reg.centroid
@@ -105,7 +116,7 @@ class Deviation(object):
                 if i >= 19:
                     break
             fig.savefig(figpath, bbox_inches='tight')
-        # still plot, but notify it didn't work
+        # plot anyway, but notify it didn't work
         if len(regions) > 1:
             return None
         return x, y
@@ -126,10 +137,12 @@ class Deviation(object):
         """
         plat = platform.system()
         if plat == 'Windows':
-            # TODO: check if it works
-            args = 'CommandCam.exe /devname {} /filename {}'.format(device, filename).split()
+            # the device name must be exactly the one shown with command /devlist
+            # spaces in the name are allowed
+            capture_soft_path = os.path.join(self.addon_path, 'CommandCam.exe')
+            args = '{} /devname "{}" /filename "{}"'.format(capture_soft_path, device, filename)
         else:
-            args = 'streamer -c {} -o {}'.format(device, filename).split()
+            args = 'streamer -c "{}" -o "{}"'.format(device, filename)
         _ = call(args)
         self.load_image(filename)
 
